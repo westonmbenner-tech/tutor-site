@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface: #f8faf9;
+  --color-surface-elevated: #ffffff;
+  --color-border: #e2e8e4;
+  --color-muted: #64748b;
+  --color-primary: #2f6f62;
+  --color-primary-hover: #255a50;
+  --color-primary-light: #e8f2ef;
+  --color-accent: #4a7c9b;
+  --color-warning: #b45309;
+  --color-danger: #b91c1c;
+  --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background: var(--color-surface);
+  color: #1e293b;
+  font-family: var(--font-sans);
+}
+
+input,
+textarea,
+select {
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: white;
+  width: 100%;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--color-primary-light);
+  border-color: var(--color-primary);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background: white;
+  border: 1px solid var(--color-border);
+  color: #334155;
+}
+
+.btn-secondary:hover {
+  background: #f1f5f9;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 0.25rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-muted);
+  border: 1px dashed var(--color-border);
+  border-radius: 0.75rem;
+  background: #fafbfa;
+}

@@ -1,0 +1,82 @@
+import { AppShell } from "@/components/layout/AppShell";
+import { DashboardCard, StatCard } from "@/components/DashboardCard";
+import { StreakProgress } from "@/components/StreakProgress";
+import { HomeworkList } from "@/components/HomeworkList";
+import { AccuracyTrendChart } from "@/components/AccuracyTrendChart";
+import { TutorCommentList } from "@/components/TutorCommentBox";
+import { requireParent } from "@/lib/auth";
+import { fetchParentStudents } from "@/lib/data";
+
+export default async function ParentDashboardPage() {
+  const profile = await requireParent();
+  const bundles = await fetchParentStudents(profile.id);
+
+  if (bundles.length === 0) {
+    return (
+      <AppShell role="parent" userName={profile.full_name ?? "Parent"}>
+        <DashboardCard title="No linked students">
+          <p className="text-sm text-[var(--color-muted)]">
+            Your tutor has not linked any student accounts to your profile yet.
+          </p>
+        </DashboardCard>
+      </AppShell>
+    );
+  }
+
+  return (
+    <AppShell role="parent" userName={profile.full_name ?? "Parent"}>
+      <h1 className="mb-6 text-2xl font-semibold text-slate-800">
+        Student progress
+      </h1>
+      <div className="space-y-8">
+        {bundles.map((bundle) => {
+          const parentComments = bundle.comments.filter(
+            (c) => c.visible_to_parent
+          );
+          const homework = bundle.homework;
+
+          return (
+            <section key={bundle.student.id}>
+              <h2 className="mb-4 text-xl font-semibold text-slate-800">
+                {bundle.student.display_name}
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-3 mb-6">
+                <StatCard
+                  label="Questions completed"
+                  value={bundle.stats.totalQuestionsCompleted}
+                />
+                <StatCard
+                  label="Accuracy"
+                  value={`${bundle.stats.accuracyPercent ?? "—"}%`}
+                />
+                <StatCard
+                  label="Weekly streak"
+                  value={`${bundle.streakCount} week(s)`}
+                />
+              </div>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <DashboardCard title="Weekly study progress">
+                  <StreakProgress
+                    progress={bundle.progress}
+                    streakCount={bundle.streakCount}
+                    calendarLogs={bundle.studyLogs}
+                    calendarFreezes={bundle.freezes}
+                  />
+                </DashboardCard>
+                <DashboardCard title="Accuracy trend">
+                  <AccuracyTrendChart data={bundle.accuracyTrend} />
+                </DashboardCard>
+                <DashboardCard title="Homework">
+                  <HomeworkList items={homework} />
+                </DashboardCard>
+                <DashboardCard title="Tutor comments">
+                  <TutorCommentList comments={parentComments} />
+                </DashboardCard>
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </AppShell>
+  );
+}

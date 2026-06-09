@@ -1,0 +1,117 @@
+import { createClient } from "@/lib/supabase/server";
+import type { Profile, UserRole } from "@/lib/types";
+import { redirect } from "next/navigation";
+
+export async function getSessionUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+}
+
+export async function getProfile(): Promise<Profile | null> {
+  const supabase = await createClient();
+  const user = await getSessionUser();
+  if (!user) return null;
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  return data as Profile | null;
+}
+
+export async function requireAuth() {
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
+  return user;
+}
+
+export async function requireRole(allowed: UserRole[]) {
+  const profile = await getProfile();
+  if (!profile || !allowed.includes(profile.role)) {
+    redirect("/login");
+  }
+  return profile;
+}
+
+export async function requireAdmin() {
+  return requireRole(["admin"]);
+}
+
+export async function requireStudent() {
+  return requireRole(["student"]);
+}
+
+export async function requireParent() {
+  return requireRole(["parent"]);
+}
+
+export function roleHomePath(role: UserRole): string {
+  switch (role) {
+    case "admin":
+      return "/admin";
+    case "parent":
+      return "/parent";
+    case "student":
+    default:
+      return "/dashboard";
+  }
+}
+
+export async function getStudentForProfile(profileId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("students")
+    .select("*")
+    .eq("profile_id", profileId)
+    .eq("active", true)
+    .maybeSingle();
+  return data;
+}
+
+export async function getParentForProfile(profileId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("parents")
+    .select("*")
+    .eq("profile_id", profileId)
+    .maybeSingle();
+  return data;
+}
+
+export async function canAccessStudent(
+  profile: Profile,
+  studentId: string
+): Promise<boolean> {
+  if (profile.role === "admin") return true;
+
+  const supabase = await createClient();
+
+  if (profile.role === "student") {
+    const { data } = await supabase
+      .from("students")
+      .select("id")
+      .eq("id", studentId)
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    return !!data;
+  }
+
+  if (profile.role === "parent") {
+    const parent = await getParentForProfile(profile.id);
+    if (!parent) return false;
+    const { data } = await supabase
+      .from("parent_student_links")
+      .select("id")
+      .eq("parent_id", parent.id)
+      .eq("student_id", studentId)
+      .maybeSingle();
+    return !!data;
+  }
+
+  return false;
+}

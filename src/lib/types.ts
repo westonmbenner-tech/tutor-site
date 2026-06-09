@@ -1,0 +1,153 @@
+export type UserRole = "admin" | "student" | "parent";
+
+export type HomeworkStatus = "assigned" | "completed" | "late" | "missing";
+
+export interface Profile {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  role: UserRole;
+  created_at: string;
+}
+
+export interface Student {
+  id: string;
+  profile_id: string | null;
+  display_name: string;
+  active: boolean;
+  created_at: string;
+}
+
+export interface Parent {
+  id: string;
+  profile_id: string | null;
+  display_name: string;
+  created_at: string;
+}
+
+export interface ParentStudentLink {
+  id: string;
+  parent_id: string;
+  student_id: string;
+  created_at: string;
+}
+
+export interface HomeworkAssignment {
+  id: string;
+  student_id: string;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  status: HomeworkStatus;
+  links: { url: string; label?: string }[];
+  attachments: { name: string; url?: string }[];
+  created_by: string | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface StudyLog {
+  id: string;
+  student_id: string;
+  log_date: string;
+  questions_completed: number;
+  questions_correct: number;
+  questions_wrong: number;
+  topic: string | null;
+  confidence: number | null;
+  errors_lessons_learned: string | null;
+  miscellaneous_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MistakeLabel {
+  id: string;
+  student_id: string;
+  name: string;
+  created_at: string;
+}
+
+export interface Mistake {
+  id: string;
+  student_id: string;
+  study_log_id: string | null;
+  mistake_date: string;
+  question_prompt: string | null;
+  topic: string | null;
+  mistake_label_id: string | null;
+  explanation: string | null;
+  lesson_learned: string | null;
+  created_at: string;
+  updated_at: string;
+  mistake_labels?: MistakeLabel | null;
+}
+
+export interface TutorComment {
+  id: string;
+  student_id: string;
+  study_log_id: string | null;
+  author_id: string;
+  comment: string;
+  visible_to_student: boolean;
+  visible_to_parent: boolean;
+  created_at: string;
+  profiles?: Pick<Profile, "full_name"> | null;
+}
+
+export interface WeakArea {
+  area: string;
+  evidence: string;
+  priority: "high" | "medium" | "low";
+}
+
+export interface GroupedCategory {
+  category: string;
+  mistake_count: number;
+  examples: string[];
+  suggestion: string;
+}
+
+export interface AIMistakeSummary {
+  id: string;
+  student_id: string;
+  generated_for_start_date: string;
+  generated_for_end_date: string;
+  summary: string | null;
+  weak_areas: WeakArea[];
+  grouped_categories: GroupedCategory[];
+  suggested_next_steps: string | null;
+  created_at: string;
+}
+
+export interface StreakFreeze {
+  id: string;
+  student_id: string;
+  freeze_date: string;
+  reason: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface WeeklyProgress {
+  weekStart: string;
+  weekEnd: string;
+  studyDays: number;
+  freezeDays: number;
+  effectiveDays: number;
+  targetDays: number;
+  isSuccessful: boolean;
+}
+
+export interface StudentAnalytics {
+  totalQuestionsCompleted: number;
+  totalQuestionsWrong: number;
+  accuracyPercent: number | null;
+  avgConfidence: number | null;
+  commonLabels: { name: string; count: number }[];
+}
+
+export interface AttentionFlag {
+  type: "no_log" | "overdue_homework" | "low_confidence" | "declining_accuracy";
+  message: string;
+}
