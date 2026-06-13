@@ -41,8 +41,8 @@ cp .env.example .env.local
 | Variable | Description |
 |----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server-only; optional for MVP) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key (client-safe) |
+| `SUPABASE_SECRET_KEY` | Supabase secret key (server-only; never expose to the client) |
 | `OPENAI_API_KEY` | OpenAI key for mistake summaries |
 | `NEXT_PUBLIC_SITE_URL` | e.g. `http://localhost:3000` |
 
