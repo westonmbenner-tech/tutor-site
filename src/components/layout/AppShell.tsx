@@ -39,11 +39,11 @@ export function AppShell({
   const links = navByRole[role];
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-full flex-col">
       <header className="border-b border-[var(--color-border)] bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <div>
-            <p className="text-sm text-[var(--color-muted)]">Study Portal</p>
+            <p className="text-sm text-[var(--color-muted)]">TutorCheck</p>
             <p className="font-medium text-slate-800">{userName}</p>
           </div>
           <nav className="flex flex-wrap gap-1">

@@ -22,29 +22,44 @@ export function ParentListItem({
   const linkedStudentIds = links.map((link) => link.student_id);
 
   return (
-    <li className="space-y-3 py-4 first:pt-0 last:pb-0">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
+    <li className="py-5 first:pt-0 last:pb-0">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 flex-1">
           <p className="font-medium text-slate-800">{parent.display_name}</p>
-          <ul className="mt-1 text-xs text-[var(--color-muted)]">
+          <div className="mt-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted)]">
+              Linked students
+            </p>
             {links.length > 0 ? (
-              links.map((link) => (
-                <li key={link.student_id}>
-                  Linked to {link.students.display_name}
-                </li>
-              ))
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {links.map((link) => (
+                  <li
+                    key={link.student_id}
+                    className="rounded-full bg-[var(--color-primary-light)]/60 px-3 py-1 text-xs font-medium text-[var(--color-primary)]"
+                  >
+                    {link.students.display_name}
+                  </li>
+                ))}
+              </ul>
             ) : (
-              <li>No linked students</li>
+              <p className="mt-1 text-sm text-[var(--color-muted)]">
+                No students linked yet
+              </p>
             )}
-          </ul>
+          </div>
         </div>
-        <RemoveParentPanel parentId={parent.id} parentName={parent.display_name} />
+        <div className="shrink-0 lg:pt-1">
+          <RemoveParentPanel parentId={parent.id} parentName={parent.display_name} />
+        </div>
       </div>
-      <ParentStudentLinksEditor
-        parentId={parent.id}
-        students={students}
-        linkedStudentIds={linkedStudentIds}
-      />
+
+      <div className="mt-4 w-full">
+        <ParentStudentLinksEditor
+          parentId={parent.id}
+          students={students}
+          linkedStudentIds={linkedStudentIds}
+        />
+      </div>
     </li>
   );
 }

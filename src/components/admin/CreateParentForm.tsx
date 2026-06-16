@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { createParent } from "@/app/actions/admin";
+import { StudentLinkPicker } from "@/components/admin/StudentLinkPicker";
 import type { Student } from "@/lib/types";
 
 const initialState = { error: null as string | null, success: false };
@@ -33,28 +34,12 @@ export function CreateParentForm({
 
       <fieldset className="form-group mb-0">
         <legend className="label mb-2">Link to students</legend>
-        {students.length === 0 ? (
-          <p className="text-sm text-[var(--color-muted)]">
-            No students yet. Add a student before registering a parent.
-          </p>
-        ) : (
-          <ul className="space-y-2 rounded-lg border border-[var(--color-border)] p-3">
-            {students.map((student) => (
-              <li key={student.id}>
-                <label className="flex items-center gap-2 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    name="student_ids"
-                    value={student.id}
-                  />
-                  {student.display_name}
-                </label>
-              </li>
-            ))}
-          </ul>
-        )}
-        <p className="mt-2 text-xs text-[var(--color-muted)]">
-          Select which student&apos;s progress this parent can view.
+        <StudentLinkPicker
+          students={students}
+          emptyMessage="No students yet. Add a student before registering a parent."
+        />
+        <p className="mt-3 text-xs text-[var(--color-muted)]">
+          Select which students&apos; progress this parent can view.
         </p>
       </fieldset>
 

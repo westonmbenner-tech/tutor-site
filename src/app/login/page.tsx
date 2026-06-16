@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 export default async function LoginPage({
@@ -9,13 +10,18 @@ export default async function LoginPage({
   const authFailed = params.error === "auth";
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex flex-1 items-center justify-center px-4">
       <div className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-white p-8 shadow-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold text-slate-800">
-            Study Portal
-          </h1>
-          <p className="mt-2 text-sm text-[var(--color-muted)]">
+          <Image
+            src="/tutorcheck-logo.png"
+            alt="TutorCheck"
+            width={280}
+            height={72}
+            className="mx-auto h-auto w-full max-w-[280px]"
+            priority
+          />
+          <p className="mt-4 text-sm text-[var(--color-muted)]">
             Sign in to log study sessions, track homework, and review progress.
           </p>
         </div>

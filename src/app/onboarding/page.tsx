@@ -13,11 +13,11 @@ export default async function OnboardingPage() {
   if (!needsRoleSelection(profile)) redirect(roleHomePath(profile.role));
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex flex-1 items-center justify-center px-4">
       <div className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-white p-8 shadow-sm">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold text-slate-800">
-            Welcome to Study Portal
+            Welcome to TutorCheck
           </h1>
           <p className="mt-2 text-sm text-[var(--color-muted)]">
             Tell us how you&apos;ll use this account. Your tutor will approve it

@@ -6,7 +6,7 @@ import {
 import { roleHomePath } from "@/lib/roles";
 import type { UserRole } from "@/lib/types";
 
-const publicRoutes = ["/login"];
+const publicRoutes = ["/login", "/privacy", "/terms"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
