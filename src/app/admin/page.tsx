@@ -65,7 +65,10 @@ export default async function AdminDashboardPage() {
             </Link>
           }
         >
-          <PendingStudentApprovals profiles={pendingProfiles} />
+          <PendingStudentApprovals
+            profiles={pendingProfiles}
+            afterRemoveRedirectTo="/admin"
+          />
         </DashboardCard>
       )}
 

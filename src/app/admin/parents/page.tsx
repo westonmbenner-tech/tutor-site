@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/layout/AppShell";
+import { PageFullBleed } from "@/components/layout/PageFullBleed";
 import { DashboardCard } from "@/components/DashboardCard";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { CreateParentForm } from "@/components/admin/CreateParentForm";
@@ -57,21 +58,23 @@ export default async function AdminParentsPage() {
         </CollapsibleSection>
       </div>
 
-      <DashboardCard title="Registered parents">
-        {parentRows.length === 0 ? (
-          <div className="empty-state">No parents yet.</div>
-        ) : (
-          <ul className="divide-y divide-[var(--color-border)]">
-            {parentRows.map((parent) => (
-              <ParentListItem
-                key={parent.id}
-                parent={parent}
-                students={students ?? []}
-              />
-            ))}
-          </ul>
-        )}
-      </DashboardCard>
+      <PageFullBleed>
+        <DashboardCard title="Registered parents">
+          {parentRows.length === 0 ? (
+            <div className="empty-state">No parents yet.</div>
+          ) : (
+            <ul className="divide-y divide-[var(--color-border)]">
+              {parentRows.map((parent) => (
+                <ParentListItem
+                  key={parent.id}
+                  parent={parent}
+                  students={students ?? []}
+                />
+              ))}
+            </ul>
+          )}
+        </DashboardCard>
+      </PageFullBleed>
     </AppShell>
   );
 }

@@ -23,7 +23,7 @@ export default async function AdminStudentsPage() {
 
       <DashboardCard
         title="Pending approval"
-        subtitle="Users who signed in but do not have an approved student or parent profile yet."
+        subtitle="Users who signed in but do not have an approved student or parent profile yet. Reject unwanted sign-ins to remove their Google login entirely."
         className="mb-6"
       >
         <PendingStudentApprovals profiles={pendingProfiles} />

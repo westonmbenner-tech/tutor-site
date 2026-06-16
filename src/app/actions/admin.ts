@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { studentSchema, parentLinkSchema, createParentSchema, updateParentLinksSchema } from "@/lib/validations";
 import type { SignupRole } from "@/lib/types";
 import { revalidatePath } from "next/cache";
@@ -108,6 +109,52 @@ export async function approveStudentProfile(
   profileId: string
 ): Promise<ActionState> {
   return approvePendingProfile(profileId, "student");
+}
+
+export async function deletePendingSignUp(
+  profileId: string
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const supabase = await createClient();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, role")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  if (!profile) {
+    return { error: "User profile not found.", success: false };
+  }
+
+  if (profile.role === "admin") {
+    return { error: "Cannot delete an admin account.", success: false };
+  }
+
+  const [{ data: student }, { data: parent }] = await Promise.all([
+    supabase.from("students").select("id").eq("profile_id", profileId).maybeSingle(),
+    supabase.from("parents").select("id").eq("profile_id", profileId).maybeSingle(),
+  ]);
+
+  if (student || parent) {
+    return {
+      error:
+        "This user already has an approved student or parent profile. Remove that record first.",
+      success: false,
+    };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.deleteUser(profileId);
+
+  if (error) {
+    return { error: error.message, success: false };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/students");
+  return { error: null, success: true };
 }
 
 export async function createStudent(

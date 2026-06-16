@@ -18,7 +18,7 @@ export function StudentLinkPicker({
   }
 
   return (
-    <ul className="grid gap-2 sm:grid-cols-2">
+    <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
       {students.map((student) => {
         const isLinked = linkedStudentIds?.includes(student.id) ?? false;
 
