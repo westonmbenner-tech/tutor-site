@@ -8,7 +8,7 @@ export default async function OnboardingPage() {
   await requireAuth();
   const profile = await getProfile();
 
-  if (!profile) redirect("/login");
+  if (!profile) redirect("/");
   if (profile.role === "admin") redirect(roleHomePath("admin"));
   if (!needsRoleSelection(profile)) redirect(roleHomePath(profile.role));
 

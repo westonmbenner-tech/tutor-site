@@ -13,10 +13,10 @@ export function LegalPageShell({
       <div className="mx-auto max-w-2xl">
         <header className="mb-8 border-b border-[var(--color-border)] pb-6">
           <Link
-            href="/login"
+            href="/"
             className="text-sm text-[var(--color-accent)] hover:underline"
           >
-            ← Back to sign in
+            ← Back to home
           </Link>
           <h1 className="mt-4 text-3xl font-semibold text-slate-800">{title}</h1>
           <p className="mt-2 text-sm text-[var(--color-muted)]">

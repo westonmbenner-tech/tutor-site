@@ -75,7 +75,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Creating the first admin user
 
-1. Sign in with Google at `/login` (creates a `profiles` row with role `student` by default)
+1. Sign in with Google at `/` (creates a `profiles` row with role `student` by default)
 2. In Supabase SQL Editor, promote your account:
 
 ```sql
@@ -115,7 +115,7 @@ supabase/
 
 | Route | Role |
 |-------|------|
-| `/login` | Public |
+| `/` | Public landing page |
 | `/dashboard` | Student |
 | `/dashboard/homework` | Student |
 | `/dashboard/mistakes` | Student |

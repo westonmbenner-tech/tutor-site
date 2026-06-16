@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=auth`);
+    return NextResponse.redirect(`${origin}/?error=auth`);
   }
 
   const cookieStore = await cookies();
@@ -53,7 +53,7 @@ export async function GET(request: Request) {
 
   if (error) {
     console.error("Auth callback exchange failed:", error.message);
-    return NextResponse.redirect(`${origin}/login?error=auth`);
+    return NextResponse.redirect(`${origin}/?error=auth`);
   }
 
   const {

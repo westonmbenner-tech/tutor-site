@@ -27,13 +27,13 @@ export async function getProfile(): Promise<Profile | null> {
 
 export async function requireAuth() {
   const user = await getSessionUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/");
   return user;
 }
 
 export async function requireRole(allowed: UserRole[]) {
   const profile = await getProfile();
-  if (!profile) redirect("/login");
+  if (!profile) redirect("/");
   if (!allowed.includes(profile.role)) {
     redirect(roleHomePath(profile.role));
   }

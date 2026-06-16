@@ -6,10 +6,21 @@ import {
 import { roleHomePath } from "@/lib/roles";
 import type { UserRole } from "@/lib/types";
 
-const publicRoutes = ["/login", "/privacy", "/terms"];
+const publicRoutePrefixes = ["/privacy", "/terms"];
+
+function isPublicPath(pathname: string): boolean {
+  if (pathname === "/") return true;
+  return publicRoutePrefixes.some((route) => pathname.startsWith(route));
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (pathname === "/login") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
 
   if (
     pathname.startsWith("/_next") ||
@@ -33,10 +44,10 @@ export async function middleware(request: NextRequest) {
 
   sessionResponse = getResponse();
 
-  const isPublic = publicRoutes.some((route) => pathname.startsWith(route));
+  const isPublic = isPublicPath(pathname);
 
   if (!user && !isPublic) {
-    return redirectWithSession(request, "/login", sessionResponse);
+    return redirectWithSession(request, "/", sessionResponse);
   }
 
   if (user) {
@@ -56,7 +67,7 @@ export async function middleware(request: NextRequest) {
       return redirectWithSession(request, "/onboarding", sessionResponse);
     }
 
-    if (pathname === "/login" || pathname === "/") {
+    if (pathname === "/") {
       const destination = profile?.role
         ? profile.role === "admin"
           ? roleHomePath("admin")
