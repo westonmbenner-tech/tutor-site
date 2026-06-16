@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { supabaseEnv } from "@/lib/env";
+import { authCallbackUrl } from "@/lib/env";
 
 export function GoogleSignInButton() {
   async function handleSignIn() {
@@ -10,7 +10,7 @@ export function GoogleSignInButton() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: supabaseEnv.callbackUrl,
+        redirectTo: authCallbackUrl(window.location.origin),
       },
     });
   }

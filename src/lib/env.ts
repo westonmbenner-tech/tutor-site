@@ -24,11 +24,15 @@ export const supabaseEnv = {
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
   ),
-  callbackUrl: requireEnv(
-    process.env.NEXT_PUBLIC_SUPABASE_CALLBACK,
-    "NEXT_PUBLIC_SUPABASE_CALLBACK"
-  ),
 } as const;
+
+/**
+ * OAuth redirect target for Supabase Google sign-in.
+ * Built from the current origin so local, preview, and production stay in sync.
+ */
+export function authCallbackUrl(origin: string): string {
+  return `${origin.replace(/\/$/, "")}/auth/callback`;
+}
 
 /** Server-only Supabase secret key — import only from server modules. */
 export const supabaseServerEnv = {
