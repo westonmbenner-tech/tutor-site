@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Profile, UserRole } from "@/lib/types";
+import { roleHomePath } from "@/lib/roles";
 import { redirect } from "next/navigation";
 
 export async function getSessionUser() {
@@ -32,8 +33,9 @@ export async function requireAuth() {
 
 export async function requireRole(allowed: UserRole[]) {
   const profile = await getProfile();
-  if (!profile || !allowed.includes(profile.role)) {
-    redirect("/login");
+  if (!profile) redirect("/login");
+  if (!allowed.includes(profile.role)) {
+    redirect(roleHomePath(profile.role));
   }
   return profile;
 }
@@ -50,17 +52,7 @@ export async function requireParent() {
   return requireRole(["parent"]);
 }
 
-export function roleHomePath(role: UserRole): string {
-  switch (role) {
-    case "admin":
-      return "/admin";
-    case "parent":
-      return "/parent";
-    case "student":
-    default:
-      return "/dashboard";
-  }
-}
+export { roleHomePath } from "@/lib/roles";
 
 export async function getStudentForProfile(profileId: string) {
   const supabase = await createClient();

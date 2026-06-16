@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createTutorComment } from "@/app/actions/homework";
 
 const initialState = { error: null as string | null, success: false };
@@ -8,17 +9,33 @@ const initialState = { error: null as string | null, success: false };
 export function TutorCommentBox({
   studentId,
   studyLogId,
+  homeworkAssignmentId,
 }: {
   studentId: string;
   studyLogId?: string | null;
+  homeworkAssignmentId?: string | null;
 }) {
+  const router = useRouter();
   const boundAction = createTutorComment.bind(null, studentId);
   const [state, formAction, pending] = useActionState(boundAction, initialState);
+
+  useEffect(() => {
+    if (state.success) {
+      router.refresh();
+    }
+  }, [state.success, router]);
 
   return (
     <form action={formAction} className="space-y-3 rounded-lg border border-[var(--color-border)] bg-slate-50 p-4">
       {studyLogId && (
         <input type="hidden" name="study_log_id" value={studyLogId} />
+      )}
+      {homeworkAssignmentId && (
+        <input
+          type="hidden"
+          name="homework_assignment_id"
+          value={homeworkAssignmentId}
+        />
       )}
       <div className="form-group mb-0">
         <label className="label" htmlFor="comment">

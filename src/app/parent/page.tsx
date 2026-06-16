@@ -4,11 +4,26 @@ import { StreakProgress } from "@/components/StreakProgress";
 import { HomeworkList } from "@/components/HomeworkList";
 import { AccuracyTrendChart } from "@/components/AccuracyTrendChart";
 import { TutorCommentList } from "@/components/TutorCommentBox";
-import { requireParent } from "@/lib/auth";
+import { requireParent, getParentForProfile } from "@/lib/auth";
 import { fetchParentStudents } from "@/lib/data";
 
 export default async function ParentDashboardPage() {
   const profile = await requireParent();
+  const parent = await getParentForProfile(profile.id);
+
+  if (!parent) {
+    return (
+      <AppShell role="parent" userName={profile.full_name ?? "Parent"}>
+        <DashboardCard title="Account setup pending">
+          <p className="text-sm text-[var(--color-muted)]">
+            Your tutor has not approved your parent account yet. Please contact
+            them after signing in.
+          </p>
+        </DashboardCard>
+      </AppShell>
+    );
+  }
+
   const bundles = await fetchParentStudents(profile.id);
 
   if (bundles.length === 0) {

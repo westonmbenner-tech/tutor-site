@@ -13,7 +13,9 @@ import {
 } from "@/lib/analytics";
 import type {
   HomeworkAssignment,
+  Message,
   Mistake,
+  Profile,
   StudyLog,
   StreakFreeze,
   Student,
@@ -145,6 +147,62 @@ export async function fetchAllStudentsOverview() {
   );
 
   return overviews;
+}
+
+/** Profiles awaiting tutor approval (no students or parents row yet). */
+export async function fetchPendingProfiles(): Promise<Profile[]> {
+  const supabase = await createClient();
+
+  const [{ data: profiles }, { data: students }, { data: parents }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("*")
+        .neq("role", "admin")
+        .order("created_at", { ascending: false }),
+      supabase.from("students").select("profile_id"),
+      supabase.from("parents").select("profile_id"),
+    ]);
+
+  const linkedProfileIds = new Set(
+    [
+      ...(students ?? []).map((s) => s.profile_id),
+      ...(parents ?? []).map((p) => p.profile_id),
+    ].filter((id): id is string => Boolean(id))
+  );
+
+  return ((profiles ?? []) as Profile[]).filter((p) => !linkedProfileIds.has(p.id));
+}
+
+/** @deprecated Use fetchPendingProfiles */
+export async function fetchPendingStudentProfiles(): Promise<Profile[]> {
+  return fetchPendingProfiles();
+}
+
+export async function fetchApprovedStudents(): Promise<
+  (Student & { profile: Profile | null })[]
+> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("students")
+    .select("*, profiles(*)")
+    .order("display_name");
+
+  return (data ?? []).map((row) => {
+    const { profiles, ...student } = row as Student & { profiles: Profile | null };
+    return { ...student, profile: profiles };
+  });
+}
+
+export async function fetchMessages(studentId: string): Promise<Message[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("messages")
+    .select("*, profiles(full_name, role)")
+    .eq("student_id", studentId)
+    .order("created_at", { ascending: true });
+
+  return (data ?? []) as Message[];
 }
 
 export async function fetchParentStudents(parentProfileId: string) {

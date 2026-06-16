@@ -7,14 +7,18 @@ export interface Profile {
   email: string | null;
   full_name: string | null;
   role: UserRole;
+  requested_role: SignupRole | null;
   created_at: string;
 }
+
+export type SignupRole = Extract<UserRole, "student" | "parent">;
 
 export interface Student {
   id: string;
   profile_id: string | null;
   display_name: string;
   active: boolean;
+  streak_freeze_balance: number;
   created_at: string;
 }
 
@@ -44,6 +48,7 @@ export interface HomeworkAssignment {
   created_by: string | null;
   created_at: string;
   completed_at: string | null;
+  submission_text: string | null;
 }
 
 export interface StudyLog {
@@ -87,6 +92,7 @@ export interface TutorComment {
   id: string;
   student_id: string;
   study_log_id: string | null;
+  homework_assignment_id: string | null;
   author_id: string;
   comment: string;
   visible_to_student: boolean;
@@ -150,4 +156,13 @@ export interface StudentAnalytics {
 export interface AttentionFlag {
   type: "no_log" | "overdue_homework" | "low_confidence" | "declining_accuracy";
   message: string;
+}
+
+export interface Message {
+  id: string;
+  student_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+  profiles?: Pick<Profile, "full_name" | "role"> | null;
 }

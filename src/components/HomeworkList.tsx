@@ -1,7 +1,7 @@
 "use client";
 
-import { completeHomework } from "@/app/actions/homework";
 import type { HomeworkAssignment } from "@/lib/types";
+import { HomeworkCompleteForm } from "@/components/HomeworkCompleteForm";
 
 type ResolvedHomework = HomeworkAssignment & {
   resolved_status: "assigned" | "completed" | "late" | "missing";
@@ -51,6 +51,12 @@ export function HomeworkList({
                   Due {item.due_date}
                 </p>
               )}
+              {item.submission_text && (
+                <p className="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+                  <span className="font-medium">Your submission: </span>
+                  {item.submission_text}
+                </p>
+              )}
               {Array.isArray(item.links) && item.links.length > 0 && (
                 <ul className="mt-2 space-y-1">
                   {item.links.map((link, i) => (
@@ -68,12 +74,8 @@ export function HomeworkList({
                 </ul>
               )}
             </div>
-            {showCompleteButton && item.resolved_status !== "completed" && (
-              <form action={completeHomework.bind(null, item.id)}>
-                <button type="submit" className="btn btn-secondary text-sm">
-                  Mark complete
-                </button>
-              </form>
+            {showCompleteButton && (
+              <HomeworkCompleteForm item={item} />
             )}
           </div>
         </li>

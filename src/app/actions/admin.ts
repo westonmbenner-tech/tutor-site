@@ -1,11 +1,114 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { studentSchema, parentLinkSchema } from "@/lib/validations";
+import { studentSchema, parentLinkSchema, createParentSchema, updateParentLinksSchema } from "@/lib/validations";
+import type { SignupRole } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 
-type ActionState = { error: string | null; success: boolean };
+type ActionState = {
+  error: string | null;
+  success: boolean;
+  studentId?: string;
+  parentId?: string;
+};
+
+export async function approvePendingProfile(
+  profileId: string,
+  asRole: SignupRole
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const supabase = await createClient();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", profileId)
+    .neq("role", "admin")
+    .maybeSingle();
+
+  if (!profile) {
+    return { error: "User profile not found.", success: false };
+  }
+
+  const displayName =
+    profile.full_name?.trim() ||
+    profile.email?.split("@")[0] ||
+    (asRole === "parent" ? "Parent" : "Student");
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({ role: asRole, requested_role: asRole })
+    .eq("id", profileId);
+
+  if (profileError) {
+    return { error: profileError.message, success: false };
+  }
+
+  if (asRole === "student") {
+    const { data: existing } = await supabase
+      .from("students")
+      .select("id")
+      .eq("profile_id", profileId)
+      .maybeSingle();
+
+    if (existing) {
+      return { error: null, success: true, studentId: existing.id };
+    }
+
+    const { data: student, error } = await supabase
+      .from("students")
+      .insert({
+        profile_id: profileId,
+        display_name: displayName,
+        active: true,
+        streak_freeze_balance: 10,
+      })
+      .select("id")
+      .single();
+
+    if (error) return { error: error.message, success: false };
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/students");
+    revalidatePath("/admin/parents");
+    return { error: null, success: true, studentId: student.id };
+  }
+
+  const { data: existingParent } = await supabase
+    .from("parents")
+    .select("id")
+    .eq("profile_id", profileId)
+    .maybeSingle();
+
+  if (existingParent) {
+    return { error: null, success: true, parentId: existingParent.id };
+  }
+
+  const { data: parent, error } = await supabase
+    .from("parents")
+    .insert({
+      profile_id: profileId,
+      display_name: displayName,
+    })
+    .select("id")
+    .single();
+
+  if (error) return { error: error.message, success: false };
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/students");
+  revalidatePath("/admin/parents");
+  return { error: null, success: true, parentId: parent.id };
+}
+
+/** @deprecated Use approvePendingProfile */
+export async function approveStudentProfile(
+  profileId: string
+): Promise<ActionState> {
+  return approvePendingProfile(profileId, "student");
+}
 
 export async function createStudent(
   _prev: ActionState,
@@ -49,6 +152,7 @@ export async function createStudent(
     profile_id: profileId,
     display_name: parsed.data.display_name,
     active: true,
+    streak_freeze_balance: 10,
   });
 
   if (error) return { error: error.message, success: false };
@@ -63,10 +167,11 @@ export async function createParent(
 ): Promise<ActionState> {
   await requireAdmin();
 
-  const parsed = studentSchema.safeParse({
+  const parsed = createParentSchema.safeParse({
     profile_email: formData.get("profile_email") || undefined,
     display_name: formData.get("display_name"),
     profile_id: formData.get("profile_id") || null,
+    student_ids: formData.getAll("student_ids"),
   });
 
   if (!parsed.success) {
@@ -95,15 +200,33 @@ export async function createParent(
     }
   }
 
-  const { error } = await supabase.from("parents").insert({
-    profile_id: profileId,
-    display_name: parsed.data.display_name,
-  });
+  const { data: parent, error } = await supabase
+    .from("parents")
+    .insert({
+      profile_id: profileId,
+      display_name: parsed.data.display_name,
+    })
+    .select("id")
+    .single();
 
   if (error) return { error: error.message, success: false };
 
+  const { error: linkError } = await supabase.from("parent_student_links").upsert(
+    parsed.data.student_ids.map((studentId) => ({
+      parent_id: parent.id,
+      student_id: studentId,
+    })),
+    { onConflict: "parent_id,student_id" }
+  );
+
+  if (linkError) return { error: linkError.message, success: false };
+
   revalidatePath("/admin/parents");
-  return { error: null, success: true };
+  revalidatePath("/admin/students");
+  parsed.data.student_ids.forEach((studentId) => {
+    revalidatePath(`/admin/students/${studentId}`);
+  });
+  return { error: null, success: true, parentId: parent.id };
 }
 
 export async function linkParentToStudent(
@@ -136,7 +259,131 @@ export async function linkParentToStudent(
   if (error) return { error: error.message, success: false };
 
   revalidatePath("/admin");
+  revalidatePath("/admin/parents");
   revalidatePath(`/admin/students/${parsed.data.student_id}`);
+  return { error: null, success: true };
+}
+
+export async function updateParentStudentLinks(
+  parentId: string,
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const parsed = updateParentLinksSchema.safeParse({
+    parent_id: parentId,
+    student_ids: formData.getAll("student_ids"),
+  });
+
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+      success: false,
+    };
+  }
+
+  const supabase = await createClient();
+
+  const { data: parent } = await supabase
+    .from("parents")
+    .select("id")
+    .eq("id", parentId)
+    .maybeSingle();
+
+  if (!parent) {
+    return { error: "Parent not found.", success: false };
+  }
+
+  const { data: existingLinks } = await supabase
+    .from("parent_student_links")
+    .select("student_id")
+    .eq("parent_id", parentId);
+
+  const affectedStudentIds = new Set([
+    ...(existingLinks ?? []).map((link) => link.student_id),
+    ...parsed.data.student_ids,
+  ]);
+
+  const { error: deleteError } = await supabase
+    .from("parent_student_links")
+    .delete()
+    .eq("parent_id", parentId);
+
+  if (deleteError) {
+    return { error: deleteError.message, success: false };
+  }
+
+  const { error: insertError } = await supabase.from("parent_student_links").insert(
+    parsed.data.student_ids.map((studentId) => ({
+      parent_id: parentId,
+      student_id: studentId,
+    }))
+  );
+
+  if (insertError) {
+    return { error: insertError.message, success: false };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/parents");
+  revalidatePath("/parent");
+  affectedStudentIds.forEach((studentId) => {
+    revalidatePath(`/admin/students/${studentId}`);
+  });
+  return { error: null, success: true, parentId };
+}
+
+export async function deleteStudent(studentId: string): Promise<ActionState> {
+  await requireAdmin();
+
+  const supabase = await createClient();
+  const { data: student } = await supabase
+    .from("students")
+    .select("id")
+    .eq("id", studentId)
+    .maybeSingle();
+
+  if (!student) {
+    return { error: "Student not found.", success: false };
+  }
+
+  const { error } = await supabase.from("students").delete().eq("id", studentId);
+
+  if (error) return { error: error.message, success: false };
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/students");
+  revalidatePath("/admin/homework");
+  revalidatePath("/admin/messages");
+  revalidatePath("/admin/parents");
+  revalidatePath("/dashboard");
+  revalidatePath("/parent");
+  return { error: null, success: true };
+}
+
+export async function deleteParent(parentId: string): Promise<ActionState> {
+  await requireAdmin();
+
+  const supabase = await createClient();
+  const { data: parent } = await supabase
+    .from("parents")
+    .select("id")
+    .eq("id", parentId)
+    .maybeSingle();
+
+  if (!parent) {
+    return { error: "Parent not found.", success: false };
+  }
+
+  const { error } = await supabase.from("parents").delete().eq("id", parentId);
+
+  if (error) return { error: error.message, success: false };
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/parents");
+  revalidatePath("/admin/students");
+  revalidatePath("/parent");
   return { error: null, success: true };
 }
 

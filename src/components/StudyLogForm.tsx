@@ -19,7 +19,6 @@ export function StudyLogForm({
     questions_wrong: number;
     topic: string | null;
     confidence: number | null;
-    errors_lessons_learned: string | null;
     miscellaneous_notes: string | null;
   } | null;
 }) {
@@ -101,18 +100,6 @@ export function StudyLogForm({
             ))}
           </select>
         </div>
-      </div>
-
-      <div className="form-group">
-        <label className="label" htmlFor="errors_lessons_learned">
-          Errors / lessons learned
-        </label>
-        <textarea
-          id="errors_lessons_learned"
-          name="errors_lessons_learned"
-          rows={3}
-          defaultValue={existingLog?.errors_lessons_learned ?? ""}
-        />
       </div>
 
       <div className="form-group">

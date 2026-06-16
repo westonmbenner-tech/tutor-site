@@ -3,8 +3,9 @@ import { DashboardCard, StatCard } from "@/components/DashboardCard";
 import { StreakProgress } from "@/components/StreakProgress";
 import { StudyLogForm } from "@/components/StudyLogForm";
 import { HomeworkList } from "@/components/HomeworkList";
-import { MistakeForm } from "@/components/MistakeForm";
-import { MistakeList } from "@/components/MistakeList";
+import { CollapsibleMistakeForm } from "@/components/CollapsibleMistakeForm";
+import { LessonsLearnedByTag } from "@/components/LessonsLearnedByTag";
+import { UseStreakFreezeForm } from "@/components/UseStreakFreezeForm";
 import { TutorCommentList } from "@/components/TutorCommentBox";
 import { requireStudent, getStudentForProfile } from "@/lib/auth";
 import { fetchStudentBundle } from "@/lib/data";
@@ -38,6 +39,7 @@ export default async function StudentDashboardPage() {
     (h) => h.resolved_status === "missing" || h.resolved_status === "late"
   );
   const studentComments = bundle.comments.filter((c) => c.visible_to_student);
+  const wrongCount = bundle.todayLog?.questions_wrong ?? 0;
 
   return (
     <AppShell role="student" userName={profile.full_name ?? student.display_name}>
@@ -54,7 +56,14 @@ export default async function StudentDashboardPage() {
               streakCount={bundle.streakCount}
               calendarLogs={bundle.studyLogs}
               calendarFreezes={bundle.freezes}
+              freezesRemaining={student.streak_freeze_balance}
             />
+            <div className="mt-4">
+              <UseStreakFreezeForm
+                studentId={student.id}
+                balance={student.streak_freeze_balance}
+              />
+            </div>
           </DashboardCard>
 
           <DashboardCard
@@ -68,11 +77,18 @@ export default async function StudentDashboardPage() {
             />
           </DashboardCard>
 
-          <DashboardCard title="Record a mistake">
-            <MistakeForm
+          <DashboardCard
+            title={
+              wrongCount > 0
+                ? `Record ${wrongCount} mistake${wrongCount === 1 ? "" : "s"}`
+                : "Record mistakes"
+            }
+          >
+            <CollapsibleMistakeForm
               studentId={student.id}
               labels={bundle.labels}
               studyLogId={bundle.todayLog?.id}
+              wrongCount={wrongCount}
             />
           </DashboardCard>
         </div>
@@ -96,17 +112,17 @@ export default async function StudentDashboardPage() {
           )}
 
           <DashboardCard
-            title="Recent mistakes"
+            title="Lessons learned"
             action={
               <Link
                 href="/dashboard/mistakes"
                 className="text-sm text-[var(--color-accent)]"
               >
-                View all
+                View all mistakes
               </Link>
             }
           >
-            <MistakeList mistakes={bundle.mistakes.slice(0, 5)} />
+            <LessonsLearnedByTag mistakes={bundle.mistakes.slice(0, 8)} />
           </DashboardCard>
 
           <DashboardCard title="Tutor comments">

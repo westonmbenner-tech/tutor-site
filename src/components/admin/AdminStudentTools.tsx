@@ -50,6 +50,9 @@ export function AdminStudentTools({
     <div className="space-y-6">
       <div className="rounded-lg border border-[var(--color-border)] p-4">
         <h3 className="font-medium text-slate-800">Apply streak freeze</h3>
+        <p className="mt-1 text-xs text-[var(--color-muted)]">
+          Uses one of the student&apos;s streak freeze credits.
+        </p>
         <form action={freezeAction} className="mt-3 space-y-3">
           <input type="hidden" name="student_id" value={studentId} />
           <div className="grid gap-3 sm:grid-cols-2">

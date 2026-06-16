@@ -1,11 +1,14 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { supabaseEnv } from "@/lib/env";
+import {
+  createSupabaseMiddlewareClient,
+  redirectWithSession,
+} from "@/lib/supabase/proxy";
+import { roleHomePath } from "@/lib/roles";
+import type { UserRole } from "@/lib/types";
 
-const publicRoutes = ["/login", "/auth/callback"];
+const publicRoutes = ["/login"];
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
   const { pathname } = request.nextUrl;
 
   if (
@@ -16,24 +19,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const supabase = createServerClient(
-    supabaseEnv.url,
-    supabaseEnv.publishableKey,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
+  let sessionResponse = NextResponse.next({ request });
+  const { supabase, getResponse } = createSupabaseMiddlewareClient(
+    request,
+    (response) => {
+      sessionResponse = response;
     }
   );
 
@@ -41,23 +31,47 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  sessionResponse = getResponse();
+
   const isPublic = publicRoutes.some((route) => pathname.startsWith(route));
 
   if (!user && !isPublic) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return redirectWithSession(request, "/login", sessionResponse);
   }
 
-  if (user && pathname === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role, requested_role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const needsOnboarding =
+      profile &&
+      profile.role !== "admin" &&
+      !profile.requested_role &&
+      pathname !== "/onboarding";
+
+    if (needsOnboarding) {
+      return redirectWithSession(request, "/onboarding", sessionResponse);
+    }
+
+    if (pathname === "/login" || pathname === "/") {
+      const destination = profile?.role
+        ? profile.role === "admin"
+          ? roleHomePath("admin")
+          : profile.requested_role
+            ? roleHomePath(profile.role as UserRole)
+            : "/onboarding"
+        : "/onboarding";
+
+      return redirectWithSession(request, destination, sessionResponse);
+    }
   }
 
-  return supabaseResponse;
+  return sessionResponse;
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|auth/callback).*)"],
 };

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { DashboardCard, StatCard } from "@/components/DashboardCard";
 import { StreakProgress } from "@/components/StreakProgress";
-import { HomeworkList } from "@/components/HomeworkList";
+import { AdminHomeworkSubmissions } from "@/components/admin/AdminHomeworkSubmissions";
 import { MistakeList } from "@/components/MistakeList";
 import { AccuracyTrendChart, SimpleTrendChart } from "@/components/AccuracyTrendChart";
 import {
@@ -15,6 +15,7 @@ import {
   AdminStudentTools,
   LinkParentForm,
 } from "@/components/admin/AdminStudentTools";
+import { RemoveStudentPanel } from "@/components/admin/RemoveStudentPanel";
 import { requireAdmin } from "@/lib/auth";
 import { fetchStudentBundle } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
@@ -54,9 +55,17 @@ export default async function AdminStudentDetailPage({
         >
           ← Back to students
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-800">
-          {bundle.student.display_name}
-        </h1>
+        <div className="mt-2 flex flex-wrap items-center gap-4">
+          <h1 className="text-2xl font-semibold text-slate-800">
+            {bundle.student.display_name}
+          </h1>
+          <Link
+            href={`/admin/messages/${studentId}`}
+            className="text-sm font-medium text-[var(--color-primary)]"
+          >
+            Messages
+          </Link>
+        </div>
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-4">
@@ -73,8 +82,8 @@ export default async function AdminStudentDetailPage({
           value={bundle.stats.totalQuestionsWrong}
         />
         <StatCard
-          label="Avg confidence"
-          value={bundle.stats.avgConfidence?.toFixed(1) ?? "—"}
+          label="Streak freezes left"
+          value={bundle.student.streak_freeze_balance}
         />
       </div>
 
@@ -132,8 +141,11 @@ export default async function AdminStudentDetailPage({
           )}
         </DashboardCard>
 
-        <DashboardCard title="Homework">
-          <HomeworkList items={bundle.homework} />
+        <DashboardCard title="Homework submissions">
+          <AdminHomeworkSubmissions
+            items={bundle.homework}
+            comments={bundle.comments}
+          />
         </DashboardCard>
 
         <DashboardCard title="Mistakes">
@@ -193,6 +205,16 @@ export default async function AdminStudentDetailPage({
             studentId={studentId}
             studentName={bundle.student.display_name}
             parents={(parents ?? []) as import("@/lib/types").Parent[]}
+          />
+        </DashboardCard>
+
+        <DashboardCard title="Remove student" className="lg:col-span-2">
+          <p className="mb-4 text-sm text-[var(--color-muted)]">
+            Permanently delete this student and all associated progress data.
+          </p>
+          <RemoveStudentPanel
+            studentId={studentId}
+            studentName={bundle.student.display_name}
           />
         </DashboardCard>
       </div>

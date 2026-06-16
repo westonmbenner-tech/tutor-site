@@ -1,12 +1,19 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
-import { DashboardCard, StatCard } from "@/components/DashboardCard";
+import { DashboardCard, QuickLinksCard, StatCard } from "@/components/DashboardCard";
+import { PendingStudentApprovals } from "@/components/admin/PendingStudentApprovals";
 import { requireAdmin } from "@/lib/auth";
-import { fetchAllStudentsOverview } from "@/lib/data";
+import {
+  fetchAllStudentsOverview,
+  fetchPendingProfiles,
+} from "@/lib/data";
 
 export default async function AdminDashboardPage() {
   const profile = await requireAdmin();
-  const overviews = await fetchAllStudentsOverview();
+  const [overviews, pendingProfiles] = await Promise.all([
+    fetchAllStudentsOverview(),
+    fetchPendingProfiles(),
+  ]);
 
   const needsAttention = overviews.filter((o) => o.attentionFlags.length > 0);
 
@@ -16,22 +23,54 @@ export default async function AdminDashboardPage() {
         Tutor overview
       </h1>
 
-      <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Active students" value={overviews.length} />
+      <div className="mb-8 grid gap-4 sm:grid-cols-4">
+        <StatCard
+          label="Active students"
+          value={overviews.length}
+          href="#all-students"
+          hint="Jump to student list"
+        />
+        <StatCard
+          label="Pending approval"
+          value={pendingProfiles.length}
+          href={
+            pendingProfiles.length > 0 ? "#pending-approval" : "/admin/students"
+          }
+          hint="Review sign-ups awaiting approval"
+        />
         <StatCard
           label="Need attention"
           value={needsAttention.length}
-          hint="Missing logs, overdue work, or low metrics"
+          href={needsAttention.length > 0 ? "#needs-attention" : "#all-students"}
+          hint="Students with flags or overdue work"
         />
-        <StatCard
-          label="Quick links"
-          value="→"
-          hint="Students · Homework · Parents"
+        <QuickLinksCard
+          links={[
+            { label: "Students", href: "#all-students" },
+            { label: "Homework", href: "/admin/homework#homework" },
+            { label: "Parents", href: "/admin/parents#parents" },
+          ]}
         />
       </div>
 
+      {pendingProfiles.length > 0 && (
+        <DashboardCard
+          id="pending-approval"
+          title="Users awaiting approval"
+          subtitle="These users signed in with Google and are waiting for tutor approval."
+          className="mb-6"
+          action={
+            <Link href="/admin/students" className="text-sm text-[var(--color-accent)]">
+              Manage all →
+            </Link>
+          }
+        >
+          <PendingStudentApprovals profiles={pendingProfiles} />
+        </DashboardCard>
+      )}
+
       {needsAttention.length > 0 && (
-        <DashboardCard title="Students needing attention" className="mb-6">
+        <DashboardCard id="needs-attention" title="Students needing attention" className="mb-6">
           <ul className="space-y-3">
             {needsAttention.map(({ student, attentionFlags }) => (
               <li
@@ -57,7 +96,7 @@ export default async function AdminDashboardPage() {
         </DashboardCard>
       )}
 
-      <DashboardCard title="All students">
+      <DashboardCard id="all-students" title="All students">
         {overviews.length === 0 ? (
           <div className="empty-state">
             No students yet.{" "}

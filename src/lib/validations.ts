@@ -44,9 +44,14 @@ export const homeworkSchema = z.object({
 export const commentSchema = z.object({
   student_id: z.string().uuid(),
   study_log_id: z.string().uuid().optional().nullable(),
+  homework_assignment_id: z.string().uuid().optional().nullable(),
   comment: z.string().min(1),
   visible_to_student: z.coerce.boolean(),
   visible_to_parent: z.coerce.boolean(),
+});
+
+export const homeworkSubmissionSchema = z.object({
+  submission_text: z.string().min(1, "Please describe your completed work."),
 });
 
 export const streakFreezeSchema = z.object({
@@ -61,13 +66,34 @@ export const studentSchema = z.object({
   profile_id: z.string().uuid().optional().nullable(),
 });
 
+export const createParentSchema = studentSchema.extend({
+  student_ids: z
+    .array(z.string().uuid())
+    .min(1, "Select at least one student to link."),
+});
+
 export const parentLinkSchema = z.object({
   parent_id: z.string().uuid(),
   student_id: z.string().uuid(),
+});
+
+export const updateParentLinksSchema = z.object({
+  parent_id: z.string().uuid(),
+  student_ids: z
+    .array(z.string().uuid())
+    .min(1, "Select at least one student to link."),
 });
 
 export const aiSummaryRequestSchema = z.object({
   student_id: z.string().uuid(),
   start_date: z.string().min(1),
   end_date: z.string().min(1),
+});
+
+export const messageSchema = z.object({
+  body: z
+    .string()
+    .trim()
+    .min(1, "Message cannot be empty.")
+    .max(5000, "Message is too long."),
 });

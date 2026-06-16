@@ -8,69 +8,6 @@ CREATE SCHEMA IF NOT EXISTS private;
 REVOKE ALL ON SCHEMA private FROM PUBLIC;
 REVOKE ALL ON SCHEMA private FROM anon, authenticated;
 
-CREATE OR REPLACE FUNCTION private.get_user_role()
-RETURNS text
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT role FROM public.profiles WHERE id = auth.uid();
-$$;
-
-CREATE OR REPLACE FUNCTION private.is_admin()
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'
-  );
-$$;
-
-CREATE OR REPLACE FUNCTION private.get_student_id_for_profile()
-RETURNS uuid
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT id FROM public.students WHERE profile_id = auth.uid() LIMIT 1;
-$$;
-
-CREATE OR REPLACE FUNCTION private.is_parent_of_student(p_student_id uuid)
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1
-    FROM public.parent_student_links psl
-    JOIN public.parents p ON p.id = psl.parent_id
-    WHERE p.profile_id = auth.uid() AND psl.student_id = p_student_id
-  );
-$$;
-
-CREATE OR REPLACE FUNCTION private.can_access_student(p_student_id uuid)
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT
-    private.is_admin()
-    OR EXISTS (
-      SELECT 1 FROM public.students s
-      WHERE s.id = p_student_id AND s.profile_id = auth.uid()
-    )
-    OR private.is_parent_of_student(p_student_id);
-$$;
-
 -- Profiles
 CREATE TABLE public.profiles (
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -187,6 +124,70 @@ CREATE TABLE public.streak_freezes (
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (student_id, freeze_date)
 );
+
+-- Helper functions (after tables they reference)
+CREATE OR REPLACE FUNCTION private.get_user_role()
+RETURNS text
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT role FROM public.profiles WHERE id = auth.uid();
+$$;
+
+CREATE OR REPLACE FUNCTION private.is_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION private.get_student_id_for_profile()
+RETURNS uuid
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT id FROM public.students WHERE profile_id = auth.uid() LIMIT 1;
+$$;
+
+CREATE OR REPLACE FUNCTION private.is_parent_of_student(p_student_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.parent_student_links psl
+    JOIN public.parents p ON p.id = psl.parent_id
+    WHERE p.profile_id = auth.uid() AND psl.student_id = p_student_id
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION private.can_access_student(p_student_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    private.is_admin()
+    OR EXISTS (
+      SELECT 1 FROM public.students s
+      WHERE s.id = p_student_id AND s.profile_id = auth.uid()
+    )
+    OR private.is_parent_of_student(p_student_id);
+$$;
 
 -- Indexes
 CREATE INDEX idx_students_profile_id ON public.students(profile_id);

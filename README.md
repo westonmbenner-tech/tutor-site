@@ -42,9 +42,10 @@ cp .env.example .env.local
 |----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key (client-safe) |
+| `NEXT_PUBLIC_SUPABASE_CALLBACK` | OAuth redirect URL, e.g. `http://localhost:3000/auth/callback` |
 | `SUPABASE_SECRET_KEY` | Supabase secret key (server-only; never expose to the client) |
 | `OPENAI_API_KEY` | OpenAI key for mistake summaries |
-| `NEXT_PUBLIC_SITE_URL` | e.g. `http://localhost:3000` |
+| `NEXT_PUBLIC_SITE_URL` | Optional site origin |
 
 ### 3. Supabase database
 
@@ -58,8 +59,8 @@ This creates all tables, RLS policies, auth trigger, and helper functions.
 ### 4. Google Auth in Supabase
 
 1. Supabase Dashboard → **Authentication** → **Providers** → enable **Google**
-2. Add authorized redirect URL: `http://localhost:3000/auth/callback`
-3. For production, add your Vercel URL: `https://your-domain.vercel.app/auth/callback`
+2. Under **URL Configuration**, add the same value as `NEXT_PUBLIC_SUPABASE_CALLBACK` to **Redirect URLs** (e.g. `http://localhost:3000/auth/callback`)
+3. For production, set `NEXT_PUBLIC_SUPABASE_CALLBACK` to your production callback and add it in Supabase Auth settings
 
 ### 5. Run locally
 

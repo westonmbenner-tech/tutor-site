@@ -7,6 +7,7 @@ interface StreakProgressProps {
   streakCount: number;
   calendarLogs: Pick<StudyLog, "log_date">[];
   calendarFreezes: Pick<StreakFreeze, "freeze_date">[];
+  freezesRemaining?: number;
 }
 
 export function StreakProgress({
@@ -14,6 +15,7 @@ export function StreakProgress({
   streakCount,
   calendarLogs,
   calendarFreezes,
+  freezesRemaining,
 }: StreakProgressProps) {
   const calendar = buildStudyCalendar(calendarLogs, calendarFreezes, 14);
 
@@ -39,6 +41,9 @@ export function StreakProgress({
           </p>
           <p className="mt-1 text-xs text-[var(--color-muted)]">
             5 of 7 days with a log (freezes count)
+            {freezesRemaining !== undefined
+              ? ` · ${freezesRemaining} freeze${freezesRemaining === 1 ? "" : "s"} left`
+              : ""}
           </p>
         </div>
       </div>

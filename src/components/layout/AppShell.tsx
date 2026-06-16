@@ -10,16 +10,21 @@ const navByRole: Record<UserRole, NavLink[]> = {
   student: [
     { href: "/dashboard", label: "Today" },
     { href: "/dashboard/homework", label: "Homework" },
-    { href: "/dashboard/mistakes", label: "Mistakes" },
+    { href: "/dashboard/mistakes", label: "Lessons learned" },
+    { href: "/dashboard/messages", label: "Messages" },
     { href: "/dashboard/ai-summary", label: "AI Insights" },
   ],
   admin: [
     { href: "/admin", label: "Overview" },
     { href: "/admin/students", label: "Students" },
     { href: "/admin/homework", label: "Homework" },
+    { href: "/admin/messages", label: "Messages" },
     { href: "/admin/parents", label: "Parents" },
   ],
-  parent: [{ href: "/parent", label: "Overview" }],
+  parent: [
+    { href: "/parent", label: "Overview" },
+    { href: "/parent/messages", label: "Messages" },
+  ],
 };
 
 export function AppShell({
