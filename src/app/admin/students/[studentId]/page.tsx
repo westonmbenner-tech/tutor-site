@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { DashboardCard, StatCard } from "@/components/DashboardCard";
 import { StreakProgress } from "@/components/StreakProgress";
 import { AdminHomeworkSubmissions } from "@/components/admin/AdminHomeworkSubmissions";
+import { StudyLogAdminEntry } from "@/components/admin/StudyLogAdminEntry";
 import { MistakeList } from "@/components/MistakeList";
 import { AccuracyTrendChart, SimpleTrendChart } from "@/components/AccuracyTrendChart";
 import {
@@ -124,18 +125,9 @@ export default async function AdminStudentDetailPage({
           ) : (
             <ul className="space-y-3">
               {bundle.studyLogs.slice(0, 10).map((log) => (
-                <li
-                  key={log.id}
-                  className="rounded-lg border border-[var(--color-border)] p-3 text-sm"
-                >
-                  <p className="font-medium text-slate-800">{log.log_date}</p>
-                  <p className="text-[var(--color-muted)]">
-                    {log.questions_completed} questions · {log.topic ?? "No topic"}
-                  </p>
-                  <div className="mt-2">
-                    <TutorCommentBox studentId={studentId} studyLogId={log.id} />
-                  </div>
-                </li>
+                <StudyLogAdminEntry key={log.id} log={log}>
+                  <TutorCommentBox studentId={studentId} studyLogId={log.id} />
+                </StudyLogAdminEntry>
               ))}
             </ul>
           )}
