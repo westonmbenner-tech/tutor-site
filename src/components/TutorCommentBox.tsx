@@ -4,6 +4,7 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createTutorComment } from "@/app/actions/homework";
 import { CommentReplyForm, type CommentReplyRole } from "@/components/CommentReplyForm";
+import { FormattedMultilineText } from "@/components/FormattedMultilineText";
 import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 import {
   buildCommentThreads,
@@ -90,7 +91,10 @@ function CommentItem({
         indent ? "ml-4 border-l-2 border-l-[var(--color-primary-light)]" : ""
       }`}
     >
-      <p className="whitespace-pre-wrap text-sm text-slate-700">{comment.comment}</p>
+      <FormattedMultilineText
+        text={comment.comment}
+        className="text-sm text-slate-700"
+      />
       <p className="mt-2 text-xs text-[var(--color-muted)]">
         {commentAuthorLabel(comment, currentUserId)} · {commentRoleLabel(comment)} ·{" "}
         <DisplayDateTime iso={comment.created_at} variant="datetime" />
