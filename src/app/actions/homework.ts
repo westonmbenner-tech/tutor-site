@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { homeworkSchema, commentSchema, commentReplySchema, streakFreezeSchema, homeworkSubmissionSchema } from "@/lib/validations";
+import { homeworkSchema, homeworkUpdateSchema, commentSchema, commentReplySchema, streakFreezeSchema, homeworkSubmissionSchema } from "@/lib/validations";
 import { applyStreakFreezeWithBalance } from "@/lib/streak-freezes";
 import { revalidatePath } from "next/cache";
 import { getProfile, requireAdmin, canAccessStudent, getStudentForProfile, requireStudent } from "@/lib/auth";
@@ -60,6 +60,20 @@ export async function createHomework(
   return { error: null, success: true };
 }
 
+function revalidateHomeworkPaths(homeworkId?: string, studentId?: string) {
+  revalidatePath("/admin");
+  revalidatePath("/admin/homework");
+  if (homeworkId) {
+    revalidatePath(`/admin/homework/${homeworkId}`);
+  }
+  if (studentId) {
+    revalidatePath(`/admin/students/${studentId}`);
+  }
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/homework");
+  revalidatePath("/parent");
+}
+
 export async function updateHomework(
   homeworkId: string,
   _prev: ActionState,
@@ -67,30 +81,177 @@ export async function updateHomework(
 ): Promise<ActionState> {
   await requireAdmin();
 
+  const parsed = homeworkUpdateSchema.safeParse({
+    title: formData.get("title"),
+    description: formData.get("description") || undefined,
+    due_date: formData.get("due_date") || null,
+    links: formData.get("links") || undefined,
+    attachments: formData.get("attachments") || undefined,
+    status: formData.get("status") || undefined,
+  });
+
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+      success: false,
+    };
+  }
+
   const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("homework_assignments")
+    .select("student_id")
+    .eq("id", homeworkId)
+    .maybeSingle();
+
+  if (!existing) {
+    return { error: "Homework assignment not found.", success: false };
+  }
+
   const { error } = await supabase
     .from("homework_assignments")
     .update({
-      title: formData.get("title") as string,
-      description: (formData.get("description") as string) || null,
-      due_date: (formData.get("due_date") as string) || null,
-      links: parseJsonField(formData.get("links") as string),
-      attachments: parseJsonField(formData.get("attachments") as string),
-      status: (formData.get("status") as string) || "assigned",
+      title: parsed.data.title,
+      description: parsed.data.description || null,
+      due_date: parsed.data.due_date || null,
+      links: parseJsonField(parsed.data.links),
+      attachments: parseJsonField(parsed.data.attachments),
+      status: parsed.data.status ?? "assigned",
     })
     .eq("id", homeworkId);
 
   if (error) return { error: error.message, success: false };
 
-  revalidatePath("/admin");
+  revalidateHomeworkPaths(homeworkId, existing.student_id);
   return { error: null, success: true };
 }
 
-export async function deleteHomework(homeworkId: string) {
+export async function deleteHomework(
+  homeworkId: string
+): Promise<ActionState> {
   await requireAdmin();
+
   const supabase = await createClient();
-  await supabase.from("homework_assignments").delete().eq("id", homeworkId);
-  revalidatePath("/admin");
+  const { data: existing } = await supabase
+    .from("homework_assignments")
+    .select("student_id")
+    .eq("id", homeworkId)
+    .maybeSingle();
+
+  if (!existing) {
+    return { error: "Homework assignment not found.", success: false };
+  }
+
+  const { error } = await supabase
+    .from("homework_assignments")
+    .delete()
+    .eq("id", homeworkId);
+
+  if (error) return { error: error.message, success: false };
+
+  revalidateHomeworkPaths(undefined, existing.student_id);
+  return { error: null, success: true };
+}
+
+async function assertStudentSubmissionAccess(homeworkId: string) {
+  const profile = await getProfile();
+  if (!profile) {
+    return { error: "Unauthorized", profile: null, hw: null };
+  }
+
+  if (profile.role !== "student") {
+    return {
+      error: "Only students can manage their homework submission.",
+      profile: null,
+      hw: null,
+    };
+  }
+
+  const student = await getStudentForProfile(profile.id);
+  if (!student) {
+    return { error: "Unauthorized", profile: null, hw: null };
+  }
+
+  const supabase = await createClient();
+  const { data: hw } = await supabase
+    .from("homework_assignments")
+    .select("id, student_id, status, submission_text")
+    .eq("id", homeworkId)
+    .maybeSingle();
+
+  if (!hw || hw.student_id !== student.id) {
+    return { error: "Homework assignment not found.", profile: null, hw: null };
+  }
+
+  return { error: null, profile, hw };
+}
+
+export async function updateHomeworkSubmission(
+  homeworkId: string,
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const access = await assertStudentSubmissionAccess(homeworkId);
+  if (!access.hw) {
+    return { error: access.error ?? "Unauthorized", success: false };
+  }
+
+  if (access.hw.status !== "completed" && !access.hw.submission_text) {
+    return { error: "There is no submission to edit yet.", success: false };
+  }
+
+  const parsed = homeworkSubmissionSchema.safeParse({
+    submission_text: formData.get("submission_text"),
+  });
+
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+      success: false,
+    };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("homework_assignments")
+    .update({
+      submission_text: parsed.data.submission_text,
+      status: "completed",
+    })
+    .eq("id", homeworkId);
+
+  if (error) return { error: error.message, success: false };
+
+  revalidateHomeworkPaths(homeworkId, access.hw.student_id);
+  return { error: null, success: true };
+}
+
+export async function clearHomeworkSubmission(
+  homeworkId: string
+): Promise<ActionState> {
+  const access = await assertStudentSubmissionAccess(homeworkId);
+  if (!access.hw) {
+    return { error: access.error ?? "Unauthorized", success: false };
+  }
+
+  if (access.hw.status !== "completed" && !access.hw.submission_text) {
+    return { error: "There is no submission to remove.", success: false };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("homework_assignments")
+    .update({
+      status: "assigned",
+      submission_text: null,
+      completed_at: null,
+    })
+    .eq("id", homeworkId);
+
+  if (error) return { error: error.message, success: false };
+
+  revalidateHomeworkPaths(homeworkId, access.hw.student_id);
+  return { error: null, success: true };
 }
 
 export async function completeHomework(
@@ -130,17 +291,13 @@ export async function completeHomework(
     .update({
       status: "completed",
       completed_at: new Date().toISOString(),
-      submission_text: parsed.data.submission_text.trim(),
+      submission_text: parsed.data.submission_text,
     })
     .eq("id", homeworkId);
 
   if (error) return { error: error.message, success: false };
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/homework");
-  revalidatePath("/admin");
-  revalidatePath("/admin/homework");
-  revalidatePath("/parent");
+  revalidateHomeworkPaths(homeworkId, hw.student_id);
   return { error: null, success: true };
 }
 

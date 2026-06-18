@@ -1,7 +1,9 @@
 "use client";
 
 import type { HomeworkAssignment } from "@/lib/types";
+import { FormattedMultilineText } from "@/components/FormattedMultilineText";
 import { HomeworkCompleteForm } from "@/components/HomeworkCompleteForm";
+import { HomeworkSubmissionActions } from "@/components/HomeworkSubmissionActions";
 
 type ResolvedHomework = HomeworkAssignment & {
   resolved_status: "assigned" | "completed" | "late" | "missing";
@@ -52,10 +54,13 @@ export function HomeworkList({
                 </p>
               )}
               {item.submission_text && (
-                <p className="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
-                  <span className="font-medium">Your submission: </span>
-                  {item.submission_text}
-                </p>
+                <div className="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+                  <p className="font-medium">Your submission</p>
+                  <FormattedMultilineText
+                    text={item.submission_text}
+                    className="mt-1"
+                  />
+                </div>
               )}
               {Array.isArray(item.links) && item.links.length > 0 && (
                 <ul className="mt-2 space-y-1">
@@ -74,9 +79,12 @@ export function HomeworkList({
                 </ul>
               )}
             </div>
-            {showCompleteButton && (
-              <HomeworkCompleteForm item={item} />
-            )}
+            {showCompleteButton &&
+              (item.submission_text || item.resolved_status === "completed" ? (
+                <HomeworkSubmissionActions item={item} />
+              ) : (
+                <HomeworkCompleteForm item={item} />
+              ))}
           </div>
         </li>
       ))}

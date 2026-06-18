@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { TutorCommentList } from "@/components/TutorCommentBox";
+import { DeleteHomeworkPanel } from "@/components/admin/DeleteHomeworkPanel";
+import { EditHomeworkForm } from "@/components/admin/EditHomeworkForm";
 import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
+import { FormattedMultilineText } from "@/components/FormattedMultilineText";
 import type { HomeworkAssignment, TutorComment } from "@/lib/types";
 
 type ResolvedHomework = HomeworkAssignment & {
@@ -76,9 +79,10 @@ export function HomeworkAssignmentDetail({
           </p>
         )}
         {item.submission_text ? (
-          <p className="mt-3 whitespace-pre-wrap text-sm text-slate-700">
-            {item.submission_text}
-          </p>
+          <FormattedMultilineText
+            text={item.submission_text}
+            className="mt-3 text-sm text-slate-700"
+          />
         ) : hasSubmission ? (
           <p className="mt-3 text-sm text-[var(--color-muted)]">
             Marked complete with no written submission.
@@ -88,6 +92,13 @@ export function HomeworkAssignmentDetail({
             Not submitted yet.
           </p>
         )}
+      </section>
+
+      <section className="rounded-xl border border-[var(--color-border)] bg-white p-5">
+        <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-[var(--color-muted)]">
+          Edit assignment
+        </h2>
+        <EditHomeworkForm item={item} />
       </section>
 
       <section>
@@ -101,6 +112,18 @@ export function HomeworkAssignmentDetail({
           replyAs="admin"
           showTopLevelComposer
           homeworkAssignmentId={item.id}
+        />
+      </section>
+
+      <section className="rounded-xl border border-red-200 bg-red-50/40 p-5">
+        <h2 className="mb-2 text-sm font-medium text-slate-800">Delete assignment</h2>
+        <p className="mb-4 text-sm text-[var(--color-muted)]">
+          Permanently remove this homework assignment for the student.
+        </p>
+        <DeleteHomeworkPanel
+          homeworkId={item.id}
+          homeworkTitle={item.title}
+          redirectTo="/admin/homework"
         />
       </section>
     </div>

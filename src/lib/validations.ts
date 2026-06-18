@@ -62,7 +62,19 @@ export const commentReplySchema = z.object({
 });
 
 export const homeworkSubmissionSchema = z.object({
-  submission_text: z.string().min(1, "Please describe your completed work."),
+  submission_text: z
+    .string()
+    .min(1, "Please describe your completed work.")
+    .transform((value) => value.replace(/\r\n/g, "\n").trim()),
+});
+
+export const homeworkUpdateSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  due_date: z.string().optional().nullable(),
+  links: z.string().optional(),
+  attachments: z.string().optional(),
+  status: z.enum(["assigned", "completed", "late", "missing"]).optional(),
 });
 
 export const streakFreezeSchema = z.object({
