@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { approvePendingProfile } from "@/app/actions/admin";
 import { RejectPendingSignUpPanel } from "@/components/admin/RejectPendingSignUpPanel";
+import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 import { RoleSelect } from "@/components/auth/RoleSelect";
 import { roleLabel } from "@/lib/profile-setup";
 import type { Profile, SignupRole } from "@/lib/types";
@@ -73,7 +74,7 @@ function PendingUserRow({
             <p className="text-xs text-[var(--color-muted)]">{profile.email}</p>
           )}
           <p className="mt-1 text-xs text-[var(--color-muted)]">
-            Signed up {new Date(profile.created_at).toLocaleDateString()}
+            Signed up <DisplayDateTime iso={profile.created_at} variant="date" />
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="text-xs font-medium text-slate-600">Requested role</span>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { TutorCommentBox, TutorCommentList } from "@/components/TutorCommentBox";
+import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 import type { HomeworkAssignment, TutorComment } from "@/lib/types";
 
 type ResolvedHomework = HomeworkAssignment & {
@@ -69,7 +70,7 @@ export function HomeworkAssignmentDetail({
         </h2>
         {item.completed_at && (
           <p className="mt-2 text-xs text-[var(--color-muted)]">
-            Submitted {item.completed_at.slice(0, 10)}
+            Submitted <DisplayDateTime iso={item.completed_at} variant="datetime" />
           </p>
         )}
         {item.submission_text ? (
@@ -191,9 +192,12 @@ export function AdminHomeworkSubmissions({
               </Link>
               <p className="mt-1 text-xs text-[var(--color-muted)] capitalize">
                 {item.resolved_status}
-                {item.completed_at
-                  ? ` · submitted ${item.completed_at.slice(0, 10)}`
-                  : ""}
+                {item.completed_at ? (
+                  <>
+                    {" · submitted "}
+                    <DisplayDateTime iso={item.completed_at} variant="datetime" />
+                  </>
+                ) : null}
                 {homeworkComments.length > 0
                   ? ` · ${homeworkComments.length} comment${homeworkComments.length === 1 ? "" : "s"}`
                   : ""}

@@ -1,5 +1,6 @@
 import { MessageComposer } from "@/components/messages/MessageComposer";
-import { authorRoleLabel, formatMessageTime } from "@/lib/messages";
+import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
+import { authorRoleLabel } from "@/lib/messages";
 import type { Message } from "@/lib/types";
 import type { UserRole } from "@/lib/types";
 
@@ -61,7 +62,12 @@ export function MessageThread({
                       isSelf ? "text-white/70" : "text-[var(--color-muted)]"
                     }`}
                   >
-                    {formatMessageTime(message.created_at)}
+                    <DisplayDateTime
+                      iso={message.created_at}
+                      className={
+                        isSelf ? "text-white/70" : "text-[var(--color-muted)]"
+                      }
+                    />
                   </p>
                 </div>
               </article>

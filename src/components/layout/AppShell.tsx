@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { TimezoneProvider } from "@/components/timezone/TimezoneProvider";
+import { TimezoneSelector } from "@/components/timezone/TimezoneSelector";
 import type { UserRole } from "@/lib/types";
 
 interface NavLink {
@@ -39,32 +41,37 @@ export function AppShell({
   const links = navByRole[role];
 
   return (
-    <div className="flex min-h-full flex-col">
-      <header className="border-b border-[var(--color-border)] bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div>
-            <p className="text-sm text-[var(--color-muted)]">TutorCheck</p>
-            <p className="font-medium text-slate-800">{userName}</p>
+    <TimezoneProvider>
+      <div className="flex min-h-full flex-col">
+        <header className="border-b border-[var(--color-border)] bg-white">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
+            <div>
+              <p className="text-sm text-[var(--color-muted)]">TutorCheck</p>
+              <p className="font-medium text-slate-800">{userName}</p>
+            </div>
+            <nav className="flex flex-wrap gap-1">
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+            <div className="flex flex-wrap items-center gap-3">
+              <TimezoneSelector />
+              <form action="/api/auth/signout" method="post">
+                <button type="submit" className="btn btn-secondary text-sm">
+                  Sign out
+                </button>
+              </form>
+            </div>
           </div>
-          <nav className="flex flex-wrap gap-1">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <form action="/api/auth/signout" method="post">
-            <button type="submit" className="btn btn-secondary text-sm">
-              Sign out
-            </button>
-          </form>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>
-    </div>
+        </header>
+        <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>
+      </div>
+    </TimezoneProvider>
   );
 }

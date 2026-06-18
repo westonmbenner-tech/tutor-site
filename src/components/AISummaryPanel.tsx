@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 import type { AIMistakeSummary } from "@/lib/types";
 
 export function AISummaryPanel({
@@ -100,7 +101,7 @@ export function AISummaryPanel({
             >
               <p className="text-xs text-[var(--color-muted)]">
                 {s.generated_for_start_date} → {s.generated_for_end_date} ·{" "}
-                {new Date(s.created_at).toLocaleDateString()}
+                <DisplayDateTime iso={s.created_at} variant="datetime" />
               </p>
               {s.summary && (
                 <p className="mt-3 text-sm text-slate-700">{s.summary}</p>

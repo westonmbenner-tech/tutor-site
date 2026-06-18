@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createTutorComment } from "@/app/actions/homework";
+import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 
 const initialState = { error: null as string | null, success: false };
 
@@ -91,7 +92,8 @@ export function TutorCommentList({
         >
           <p className="text-sm text-slate-700">{c.comment}</p>
           <p className="mt-2 text-xs text-[var(--color-muted)]">
-            {c.profiles?.full_name ?? "Tutor"} · {c.created_at.slice(0, 10)}
+            {c.profiles?.full_name ?? "Tutor"} ·{" "}
+            <DisplayDateTime iso={c.created_at} variant="datetime" />
           </p>
         </li>
       ))}
