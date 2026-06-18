@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AppShell } from "@/components/layout/AppShell";
+import { RoleAppShell } from "@/components/layout/RoleAppShell";
 import { DashboardCard } from "@/components/DashboardCard";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { CreateStudentForm } from "@/components/admin/CreateStudentForm";
@@ -18,7 +18,7 @@ export default async function AdminStudentsPage() {
   ]);
 
   return (
-    <AppShell role="admin" userName={profile.full_name ?? "Tutor"}>
+    <RoleAppShell profile={profile} userName={profile.full_name ?? "Tutor"}>
       <h1 className="mb-6 text-2xl font-semibold text-slate-800">Students</h1>
 
       <DashboardCard
@@ -68,6 +68,6 @@ export default async function AdminStudentsPage() {
           </ul>
         )}
       </DashboardCard>
-    </AppShell>
+    </RoleAppShell>
   );
 }

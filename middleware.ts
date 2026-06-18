@@ -3,6 +3,7 @@ import {
   createSupabaseMiddlewareClient,
   redirectWithSession,
 } from "@/lib/supabase/proxy";
+import { recordLoginIfNeeded } from "@/lib/record-login";
 import { roleHomePath } from "@/lib/roles";
 import type { UserRole } from "@/lib/types";
 
@@ -51,6 +52,12 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user) {
+    await recordLoginIfNeeded(supabase, request.cookies, {
+      set: (name, value, options) => {
+        sessionResponse.cookies.set(name, value, options);
+      },
+    });
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("role, requested_role")

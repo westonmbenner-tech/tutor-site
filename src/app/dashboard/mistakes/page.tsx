@@ -1,4 +1,4 @@
-import { AppShell } from "@/components/layout/AppShell";
+import { RoleAppShell } from "@/components/layout/RoleAppShell";
 import { DashboardCard } from "@/components/DashboardCard";
 import { CollapsibleMistakeForm } from "@/components/CollapsibleMistakeForm";
 import { MistakeList } from "@/components/MistakeList";
@@ -12,13 +12,13 @@ export default async function StudentLessonsLearnedPage() {
 
   if (!student) {
     return (
-      <AppShell role="student" userName={profile.full_name ?? "Student"}>
+      <RoleAppShell profile={profile} userName={profile.full_name ?? "Student"}>
         <DashboardCard title="Account setup pending">
           <p className="text-sm text-[var(--color-muted)]">
             Contact your tutor to finish account setup.
           </p>
         </DashboardCard>
-      </AppShell>
+      </RoleAppShell>
     );
   }
 
@@ -26,7 +26,7 @@ export default async function StudentLessonsLearnedPage() {
   const wrongCount = bundle.todayLog?.questions_wrong ?? 0;
 
   return (
-    <AppShell role="student" userName={profile.full_name ?? student.display_name}>
+    <RoleAppShell profile={profile} userName={profile.full_name ?? student.display_name}>
       <h1 className="mb-6 text-2xl font-semibold text-slate-800">
         Lessons learned
       </h1>
@@ -48,6 +48,6 @@ export default async function StudentLessonsLearnedPage() {
           <LessonsLearnedByTag mistakes={bundle.mistakes} />
         </DashboardCard>
       </div>
-    </AppShell>
+    </RoleAppShell>
   );
 }

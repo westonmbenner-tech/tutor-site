@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { AppShell } from "@/components/layout/AppShell";
+import { RoleAppShell } from "@/components/layout/RoleAppShell";
 import { DashboardCard, StatCard } from "@/components/DashboardCard";
 import { StreakProgress } from "@/components/StreakProgress";
 import { AdminHomeworkSubmissions } from "@/components/admin/AdminHomeworkSubmissions";
@@ -16,6 +16,7 @@ import {
   LinkParentForm,
 } from "@/components/admin/AdminStudentTools";
 import { RemoveStudentPanel } from "@/components/admin/RemoveStudentPanel";
+import { StudentLoginHistory } from "@/components/admin/StudentLoginHistory";
 import { requireAdmin } from "@/lib/auth";
 import { fetchStudentBundle } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
@@ -46,8 +47,19 @@ export default async function AdminStudentDetailPage({
     .select("*, parents(display_name)")
     .eq("student_id", studentId);
 
+  let studentLoginHistory: unknown = [];
+  if (bundle.student.profile_id) {
+    const { data: studentProfile } = await supabase
+      .from("profiles")
+      .select("login_history")
+      .eq("id", bundle.student.profile_id)
+      .maybeSingle();
+
+    studentLoginHistory = studentProfile?.login_history ?? [];
+  }
+
   return (
-    <AppShell role="admin" userName={profile.full_name ?? "Tutor"}>
+    <RoleAppShell profile={profile} userName={profile.full_name ?? "Tutor"}>
       <div className="mb-6">
         <Link
           href="/admin/students"
@@ -191,6 +203,10 @@ export default async function AdminStudentDetailPage({
           />
         </DashboardCard>
 
+        <DashboardCard title="Recent sign-ins">
+          <StudentLoginHistory loginHistory={studentLoginHistory} />
+        </DashboardCard>
+
         <DashboardCard title="Parent links">
           {links?.length ? (
             <ul className="mb-4 space-y-1 text-sm">
@@ -229,6 +245,6 @@ export default async function AdminStudentDetailPage({
           />
         </DashboardCard>
       </div>
-    </AppShell>
+    </RoleAppShell>
   );
 }

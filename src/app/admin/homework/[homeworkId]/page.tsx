@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AppShell } from "@/components/layout/AppShell";
+import { RoleAppShell } from "@/components/layout/RoleAppShell";
 import { DashboardCard } from "@/components/DashboardCard";
 import { HomeworkAssignmentDetail } from "@/components/admin/AdminHomeworkSubmissions";
 import { requireAdmin } from "@/lib/auth";
@@ -38,7 +38,7 @@ export default async function AdminHomeworkDetailPage({
       .students?.display_name ?? "Student";
 
   return (
-    <AppShell role="admin" userName={profile.full_name ?? "Tutor"}>
+    <RoleAppShell profile={profile} userName={profile.full_name ?? "Tutor"}>
       <div className="mb-6">
         <Link
           href="/admin/homework"
@@ -55,6 +55,6 @@ export default async function AdminHomeworkDetailPage({
           currentUserId={profile.id}
         />
       </DashboardCard>
-    </AppShell>
+    </RoleAppShell>
   );
 }

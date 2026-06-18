@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { supabaseEnv } from "@/lib/env";
+import { recordLoginIfNeeded } from "@/lib/record-login";
 import { roleHomePath } from "@/lib/roles";
 import type { UserRole } from "@/lib/types";
 
@@ -60,6 +61,16 @@ export async function GET(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const loginCookiesToApply: CookieToSet[] = [];
+
+  if (user) {
+    await recordLoginIfNeeded(supabase, cookieStore, {
+      set: (name, value, options) => {
+        loginCookiesToApply.push({ name, value, options });
+      },
+    });
+  }
+
   let destination = "/onboarding";
   if (user) {
     const { data: profile } = await supabase
@@ -83,6 +94,9 @@ export async function GET(request: Request) {
   const response = NextResponse.redirect(`${redirectBase}${destination}`);
 
   cookiesToApply.forEach(({ name, value, options }) => {
+    response.cookies.set(name, value, options);
+  });
+  loginCookiesToApply.forEach(({ name, value, options }) => {
     response.cookies.set(name, value, options);
   });
   Object.entries(headersToApply).forEach(([key, value]) => {

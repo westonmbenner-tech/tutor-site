@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AppShell } from "@/components/layout/AppShell";
+import { RoleAppShell } from "@/components/layout/RoleAppShell";
 import { DashboardCard } from "@/components/DashboardCard";
 import { MessageThread } from "@/components/messages/MessageThread";
 import { requireAdmin } from "@/lib/auth";
@@ -20,7 +20,7 @@ export default async function AdminStudentMessagesPage({
   const messages = await fetchMessages(studentId);
 
   return (
-    <AppShell role="admin" userName={profile.full_name ?? "Tutor"}>
+    <RoleAppShell profile={profile} userName={profile.full_name ?? "Tutor"}>
       <div className="mb-6">
         <Link
           href="/admin/messages"
@@ -40,6 +40,6 @@ export default async function AdminStudentMessagesPage({
           currentUserId={profile.id}
         />
       </DashboardCard>
-    </AppShell>
+    </RoleAppShell>
   );
 }

@@ -1,4 +1,4 @@
-import { AppShell } from "@/components/layout/AppShell";
+import { RoleAppShell } from "@/components/layout/RoleAppShell";
 import { DashboardCard } from "@/components/DashboardCard";
 import { CreateHomeworkForm } from "@/components/admin/CreateHomeworkForm";
 import { AdminHomeworkList } from "@/components/admin/AdminHomeworkSubmissions";
@@ -24,7 +24,7 @@ export default async function AdminHomeworkPage() {
   );
 
   return (
-    <AppShell role="admin" userName={profile.full_name ?? "Tutor"}>
+    <RoleAppShell profile={profile} userName={profile.full_name ?? "Tutor"}>
       <h1
         id="homework"
         className="mb-6 scroll-mt-24 text-2xl font-semibold text-slate-800"
@@ -42,6 +42,6 @@ export default async function AdminHomeworkPage() {
           <AdminHomeworkList items={resolved} />
         </DashboardCard>
       </div>
-    </AppShell>
+    </RoleAppShell>
   );
 }

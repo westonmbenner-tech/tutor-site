@@ -102,9 +102,9 @@ export function HomeworkAssignmentDetail({
           studentId={item.student_id}
           currentUserId={currentUserId}
           replyAs="admin"
-          showTopLevelComposer
+          showTopLevelComposer={comments.length === 0}
           homeworkAssignmentId={item.id}
-          useTutorCommentLabels
+          useReplyLabelsForComposer
         />
       </section>
 

@@ -20,10 +20,12 @@ export function TutorCommentBox({
   studentId,
   studyLogId,
   homeworkAssignmentId,
+  useReplyLabels = false,
 }: {
   studentId: string;
   studyLogId?: string | null;
   homeworkAssignmentId?: string | null;
+  useReplyLabels?: boolean;
 }) {
   const router = useRouter();
   const boundAction = createTutorComment.bind(null, studentId);
@@ -34,6 +36,10 @@ export function TutorCommentBox({
       router.refresh();
     }
   }, [state.success, router]);
+
+  const fieldLabel = useReplyLabels ? "Write a reply" : "Tutor comment";
+  const submitLabel = useReplyLabels ? "Post reply" : "Post comment";
+  const successMessage = useReplyLabels ? "Reply posted." : "Comment posted.";
 
   return (
     <form action={formAction} className="space-y-3 rounded-lg border border-[var(--color-border)] bg-slate-50 p-4">
@@ -49,7 +55,7 @@ export function TutorCommentBox({
       )}
       <div className="form-group mb-0">
         <label className="label" htmlFor="comment">
-          Tutor comment
+          {fieldLabel}
         </label>
         <textarea id="comment" name="comment" rows={3} required />
       </div>
@@ -67,10 +73,10 @@ export function TutorCommentBox({
         <p className="text-sm text-[var(--color-danger)]">{state.error}</p>
       )}
       {state.success && (
-        <p className="text-sm text-[var(--color-primary)]">Comment posted.</p>
+        <p className="text-sm text-[var(--color-primary)]">{successMessage}</p>
       )}
       <button type="submit" disabled={pending} className="btn btn-primary text-sm">
-        Post comment
+        {pending ? "Posting…" : submitLabel}
       </button>
     </form>
   );
@@ -112,6 +118,7 @@ export function TutorCommentList({
   studyLogId,
   homeworkAssignmentId,
   useTutorCommentLabels = false,
+  useReplyLabelsForComposer = false,
 }: {
   comments: TutorComment[];
   studentId?: string;
@@ -121,6 +128,7 @@ export function TutorCommentList({
   studyLogId?: string | null;
   homeworkAssignmentId?: string | null;
   useTutorCommentLabels?: boolean;
+  useReplyLabelsForComposer?: boolean;
 }) {
   if (comments.length === 0 && !showTopLevelComposer) {
     return <div className="empty-state">No comments yet.</div>;
@@ -128,18 +136,11 @@ export function TutorCommentList({
 
   const threads = buildCommentThreads(comments);
   const canReply = Boolean(studentId && replyAs);
+  const showComposer = showTopLevelComposer && studentId && replyAs === "admin";
 
   return (
     <div className="space-y-4">
-      {showTopLevelComposer && studentId && replyAs === "admin" && (
-        <TutorCommentBox
-          studentId={studentId}
-          studyLogId={studyLogId}
-          homeworkAssignmentId={homeworkAssignmentId}
-        />
-      )}
-
-      {threads.length === 0 ? (
+      {threads.length === 0 && !showComposer ? (
         <div className="empty-state">No comments yet.</div>
       ) : (
         <ul className="space-y-4">
@@ -188,6 +189,15 @@ export function TutorCommentList({
             );
           })}
         </ul>
+      )}
+
+      {showComposer && (
+        <TutorCommentBox
+          studentId={studentId}
+          studyLogId={studyLogId}
+          homeworkAssignmentId={homeworkAssignmentId}
+          useReplyLabels={useReplyLabelsForComposer}
+        />
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import { AppShell } from "@/components/layout/AppShell";
+import { RoleAppShell } from "@/components/layout/RoleAppShell";
 import { DashboardCard } from "@/components/DashboardCard";
 import { MessageThread } from "@/components/messages/MessageThread";
 import { StudentThreadPicker } from "@/components/messages/StudentThreadPicker";
@@ -16,14 +16,14 @@ export default async function ParentMessagesPage({
 
   if (!parent) {
     return (
-      <AppShell role="parent" userName={profile.full_name ?? "Parent"}>
+      <RoleAppShell profile={profile} userName={profile.full_name ?? "Parent"}>
         <DashboardCard title="Account setup pending">
           <p className="text-sm text-[var(--color-muted)]">
             Your tutor has not approved your parent account yet. Please contact
             them after signing in.
           </p>
         </DashboardCard>
-      </AppShell>
+      </RoleAppShell>
     );
   }
 
@@ -31,13 +31,13 @@ export default async function ParentMessagesPage({
 
   if (bundles.length === 0) {
     return (
-      <AppShell role="parent" userName={profile.full_name ?? "Parent"}>
+      <RoleAppShell profile={profile} userName={profile.full_name ?? "Parent"}>
         <DashboardCard title="No linked students">
           <p className="text-sm text-[var(--color-muted)]">
             Your tutor has not linked any student accounts to your profile yet.
           </p>
         </DashboardCard>
-      </AppShell>
+      </RoleAppShell>
     );
   }
 
@@ -49,7 +49,7 @@ export default async function ParentMessagesPage({
   const messages = await fetchMessages(activeStudentId);
 
   return (
-    <AppShell role="parent" userName={profile.full_name ?? "Parent"}>
+    <RoleAppShell profile={profile} userName={profile.full_name ?? "Parent"}>
       <h1 className="mb-2 text-2xl font-semibold text-slate-800">Messages</h1>
       <StudentThreadPicker
         students={students}
@@ -64,6 +64,6 @@ export default async function ParentMessagesPage({
           currentUserId={profile.id}
         />
       </DashboardCard>
-    </AppShell>
+    </RoleAppShell>
   );
 }

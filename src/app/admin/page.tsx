@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { AppShell } from "@/components/layout/AppShell";
+import { RoleAppShell } from "@/components/layout/RoleAppShell";
+import { OverviewNotificationBanner } from "@/components/OverviewNotificationBanner";
 import { DashboardCard, QuickLinksCard, StatCard } from "@/components/DashboardCard";
 import { PendingStudentApprovals } from "@/components/admin/PendingStudentApprovals";
 import { requireAdmin } from "@/lib/auth";
@@ -7,18 +8,29 @@ import {
   fetchAllStudentsOverview,
   fetchPendingProfiles,
 } from "@/lib/data";
+import { getNotificationSummary } from "@/lib/notifications";
 
 export default async function AdminDashboardPage() {
   const profile = await requireAdmin();
-  const [overviews, pendingProfiles] = await Promise.all([
+  const [overviews, pendingProfiles, notifications] = await Promise.all([
     fetchAllStudentsOverview(),
     fetchPendingProfiles(),
+    getNotificationSummary(profile),
   ]);
 
   const needsAttention = overviews.filter((o) => o.attentionFlags.length > 0);
 
   return (
-    <AppShell role="admin" userName={profile.full_name ?? "Tutor"}>
+    <RoleAppShell
+      profile={profile}
+      userName={profile.full_name ?? "Tutor"}
+      notifications={notifications}
+    >
+      <OverviewNotificationBanner
+        notifications={notifications}
+        overviewHref="/admin"
+        messagesHref="/admin/messages"
+      />
       <h1 className="mb-6 text-2xl font-semibold text-slate-800">
         Tutor overview
       </h1>
@@ -171,6 +183,6 @@ export default async function AdminDashboardPage() {
           </div>
         )}
       </DashboardCard>
-    </AppShell>
+    </RoleAppShell>
   );
 }

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { parseLoginHistory } from "@/lib/login-history";
 import type { Profile, UserRole } from "@/lib/types";
 import { roleHomePath } from "@/lib/roles";
 import { redirect } from "next/navigation";
@@ -22,7 +23,12 @@ export async function getProfile(): Promise<Profile | null> {
     .eq("id", user.id)
     .single();
 
-  return data as Profile | null;
+  if (!data) return null;
+
+  return {
+    ...(data as Profile),
+    login_history: parseLoginHistory((data as Profile).login_history),
+  };
 }
 
 export async function requireAuth() {

@@ -1,4 +1,5 @@
-import { AppShell } from "@/components/layout/AppShell";
+import { RoleAppShell } from "@/components/layout/RoleAppShell";
+import { OverviewNotificationBanner } from "@/components/OverviewNotificationBanner";
 import { DashboardCard, StatCard } from "@/components/DashboardCard";
 import { StreakProgress } from "@/components/StreakProgress";
 import { StudyLogForm } from "@/components/StudyLogForm";
@@ -9,6 +10,7 @@ import { UseStreakFreezeForm } from "@/components/UseStreakFreezeForm";
 import { TutorCommentList } from "@/components/TutorCommentBox";
 import { requireStudent, getStudentForProfile } from "@/lib/auth";
 import { fetchStudentBundle } from "@/lib/data";
+import { getNotificationSummary } from "@/lib/notifications";
 import { formatDateISO } from "@/lib/streak";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -19,18 +21,19 @@ export default async function StudentDashboardPage() {
 
   if (!student) {
     return (
-      <AppShell role="student" userName={profile.full_name ?? "Student"}>
+      <RoleAppShell profile={profile} userName={profile.full_name ?? "Student"}>
         <DashboardCard title="Account setup pending">
           <p className="text-sm text-[var(--color-muted)]">
             Your tutor has not linked your account to a student profile yet.
             Please contact them after signing in.
           </p>
         </DashboardCard>
-      </AppShell>
+      </RoleAppShell>
     );
   }
 
   const bundle = await fetchStudentBundle(student.id);
+  const notifications = await getNotificationSummary(profile);
   const today = format(new Date(), "EEEE, MMMM d, yyyy");
   const dueSoon = bundle.homework.filter(
     (h) => h.resolved_status === "assigned"
@@ -42,7 +45,16 @@ export default async function StudentDashboardPage() {
   const wrongCount = bundle.todayLog?.questions_wrong ?? 0;
 
   return (
-    <AppShell role="student" userName={profile.full_name ?? student.display_name}>
+    <RoleAppShell
+      profile={profile}
+      userName={profile.full_name ?? student.display_name}
+      notifications={notifications}
+    >
+      <OverviewNotificationBanner
+        notifications={notifications}
+        overviewHref="/dashboard"
+        messagesHref="/dashboard/messages"
+      />
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-slate-800">Today</h1>
         <p className="mt-1 text-[var(--color-muted)]">{today}</p>
@@ -135,6 +147,6 @@ export default async function StudentDashboardPage() {
           </DashboardCard>
         </div>
       </div>
-    </AppShell>
+    </RoleAppShell>
   );
 }

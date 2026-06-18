@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { TimezoneProvider } from "@/components/timezone/TimezoneProvider";
 import { TimezoneSelector } from "@/components/timezone/TimezoneSelector";
+import type { NotificationSummary } from "@/lib/notifications";
 import type { UserRole } from "@/lib/types";
 
 interface NavLink {
@@ -29,16 +30,29 @@ const navByRole: Record<UserRole, NavLink[]> = {
   ],
 };
 
+function NavBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+
+  return (
+    <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--color-danger)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+      {count > 9 ? "9+" : count}
+    </span>
+  );
+}
+
 export function AppShell({
   role,
   userName,
+  notifications,
   children,
 }: {
   role: UserRole;
   userName: string;
+  notifications?: NotificationSummary;
   children: React.ReactNode;
 }) {
   const links = navByRole[role];
+  const navBadges = notifications?.navBadges ?? {};
 
   return (
     <TimezoneProvider>
@@ -54,9 +68,10 @@ export function AppShell({
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
+                  className="inline-flex items-center rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
                 >
                   {link.label}
+                  <NavBadge count={navBadges[link.href] ?? 0} />
                 </Link>
               ))}
             </nav>

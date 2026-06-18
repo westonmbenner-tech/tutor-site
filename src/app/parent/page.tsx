@@ -1,4 +1,5 @@
-import { AppShell } from "@/components/layout/AppShell";
+import { RoleAppShell } from "@/components/layout/RoleAppShell";
+import { OverviewNotificationBanner } from "@/components/OverviewNotificationBanner";
 import { DashboardCard, StatCard } from "@/components/DashboardCard";
 import { StreakProgress } from "@/components/StreakProgress";
 import { HomeworkList } from "@/components/HomeworkList";
@@ -6,6 +7,7 @@ import { AccuracyTrendChart } from "@/components/AccuracyTrendChart";
 import { TutorCommentList } from "@/components/TutorCommentBox";
 import { requireParent, getParentForProfile } from "@/lib/auth";
 import { fetchParentStudents } from "@/lib/data";
+import { getNotificationSummary } from "@/lib/notifications";
 
 export default async function ParentDashboardPage() {
   const profile = await requireParent();
@@ -13,33 +15,43 @@ export default async function ParentDashboardPage() {
 
   if (!parent) {
     return (
-      <AppShell role="parent" userName={profile.full_name ?? "Parent"}>
+      <RoleAppShell profile={profile} userName={profile.full_name ?? "Parent"}>
         <DashboardCard title="Account setup pending">
           <p className="text-sm text-[var(--color-muted)]">
             Your tutor has not approved your parent account yet. Please contact
             them after signing in.
           </p>
         </DashboardCard>
-      </AppShell>
+      </RoleAppShell>
     );
   }
 
   const bundles = await fetchParentStudents(profile.id);
+  const notifications = await getNotificationSummary(profile);
 
   if (bundles.length === 0) {
     return (
-      <AppShell role="parent" userName={profile.full_name ?? "Parent"}>
+      <RoleAppShell profile={profile} userName={profile.full_name ?? "Parent"}>
         <DashboardCard title="No linked students">
           <p className="text-sm text-[var(--color-muted)]">
             Your tutor has not linked any student accounts to your profile yet.
           </p>
         </DashboardCard>
-      </AppShell>
+      </RoleAppShell>
     );
   }
 
   return (
-    <AppShell role="parent" userName={profile.full_name ?? "Parent"}>
+    <RoleAppShell
+      profile={profile}
+      userName={profile.full_name ?? "Parent"}
+      notifications={notifications}
+    >
+      <OverviewNotificationBanner
+        notifications={notifications}
+        overviewHref="/parent"
+        messagesHref="/parent/messages"
+      />
       <h1 className="mb-6 text-2xl font-semibold text-slate-800">
         Student progress
       </h1>
@@ -97,6 +109,6 @@ export default async function ParentDashboardPage() {
           );
         })}
       </div>
-    </AppShell>
+    </RoleAppShell>
   );
 }

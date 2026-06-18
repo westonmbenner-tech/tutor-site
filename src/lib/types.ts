@@ -8,6 +8,7 @@ export interface Profile {
   full_name: string | null;
   role: UserRole;
   requested_role: SignupRole | null;
+  login_history: string[];
   created_at: string;
 }
 

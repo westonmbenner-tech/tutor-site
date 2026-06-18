@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AppShell } from "@/components/layout/AppShell";
+import { RoleAppShell } from "@/components/layout/RoleAppShell";
 import { DashboardCard } from "@/components/DashboardCard";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -15,7 +15,7 @@ export default async function AdminMessagesIndexPage() {
     .order("display_name");
 
   return (
-    <AppShell role="admin" userName={profile.full_name ?? "Tutor"}>
+    <RoleAppShell profile={profile} userName={profile.full_name ?? "Tutor"}>
       <h1 className="mb-6 text-2xl font-semibold text-slate-800">Messages</h1>
       <DashboardCard title="Student conversations">
         {!students?.length ? (
@@ -38,6 +38,6 @@ export default async function AdminMessagesIndexPage() {
           </ul>
         )}
       </DashboardCard>
-    </AppShell>
+    </RoleAppShell>
   );
 }
