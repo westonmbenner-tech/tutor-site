@@ -11,10 +11,12 @@ export function CommentReplyForm({
   studentId,
   parentCommentId,
   showVisibilityToggles = false,
+  useTutorCommentLabels = false,
 }: {
   studentId: string;
   parentCommentId: string;
   showVisibilityToggles?: boolean;
+  useTutorCommentLabels?: boolean;
 }) {
   const router = useRouter();
   const boundAction = replyToComment.bind(null, studentId, parentCommentId);
@@ -26,17 +28,24 @@ export function CommentReplyForm({
     }
   }, [state.success, router]);
 
+  const fieldLabel = useTutorCommentLabels ? "Tutor comment" : "Write a reply";
+  const placeholder = useTutorCommentLabels
+    ? "Write a tutor comment…"
+    : "Write a reply…";
+  const submitLabel = useTutorCommentLabels ? "Post comment" : "Post reply";
+  const successMessage = useTutorCommentLabels ? "Comment posted." : "Reply posted.";
+
   return (
     <form action={formAction} className="mt-3 space-y-2">
       <label className="sr-only" htmlFor={`reply-${parentCommentId}`}>
-        Write a reply
+        {fieldLabel}
       </label>
       <textarea
         id={`reply-${parentCommentId}`}
         name="comment"
-        rows={2}
+        rows={useTutorCommentLabels ? 3 : 2}
         required
-        placeholder="Write a reply…"
+        placeholder={placeholder}
         className="text-sm"
       />
       {showVisibilityToggles && (
@@ -55,10 +64,14 @@ export function CommentReplyForm({
         <p className="text-xs text-[var(--color-danger)]">{state.error}</p>
       )}
       {state.success && (
-        <p className="text-xs text-[var(--color-primary)]">Reply posted.</p>
+        <p className="text-xs text-[var(--color-primary)]">{successMessage}</p>
       )}
-      <button type="submit" disabled={pending} className="btn btn-secondary text-xs">
-        {pending ? "Posting…" : "Post reply"}
+      <button
+        type="submit"
+        disabled={pending}
+        className={`text-sm ${useTutorCommentLabels ? "btn btn-primary" : "btn btn-secondary text-xs"}`}
+      >
+        {pending ? "Posting…" : submitLabel}
       </button>
     </form>
   );

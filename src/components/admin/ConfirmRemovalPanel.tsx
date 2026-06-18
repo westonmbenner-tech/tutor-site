@@ -11,15 +11,21 @@ export function ConfirmRemovalPanel({
   consequences,
   onRemove,
   redirectTo,
+  startInConfirmStep = false,
+  idleButtonLabel,
 }: {
   entityLabel: string;
   entityName: string;
   consequences: string[];
   onRemove: () => Promise<RemovalResult>;
   redirectTo: string;
+  startInConfirmStep?: boolean;
+  idleButtonLabel?: string;
 }) {
   const router = useRouter();
-  const [step, setStep] = useState<"idle" | "confirm">("idle");
+  const [step, setStep] = useState<"idle" | "confirm">(
+    startInConfirmStep ? "confirm" : "idle"
+  );
   const [acknowledged, setAcknowledged] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -49,7 +55,7 @@ export function ConfirmRemovalPanel({
         onClick={() => setStep("confirm")}
         className="btn btn-secondary text-sm text-[var(--color-danger)]"
       >
-        Remove {entityLabel.toLowerCase()}
+        Remove {idleButtonLabel ?? entityLabel.toLowerCase()}
       </button>
     );
   }

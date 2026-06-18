@@ -111,6 +111,7 @@ export function TutorCommentList({
   showTopLevelComposer = false,
   studyLogId,
   homeworkAssignmentId,
+  useTutorCommentLabels = false,
 }: {
   comments: TutorComment[];
   studentId?: string;
@@ -119,6 +120,7 @@ export function TutorCommentList({
   showTopLevelComposer?: boolean;
   studyLogId?: string | null;
   homeworkAssignmentId?: string | null;
+  useTutorCommentLabels?: boolean;
 }) {
   if (comments.length === 0 && !showTopLevelComposer) {
     return <div className="empty-state">No comments yet.</div>;
@@ -166,6 +168,7 @@ export function TutorCommentList({
                               studentId={studentId}
                               parentCommentId={reply.id}
                               showVisibilityToggles={replyAs === "admin"}
+                              useTutorCommentLabels={useTutorCommentLabels}
                             />
                           )}
                         </li>
@@ -178,6 +181,7 @@ export function TutorCommentList({
                     studentId={studentId}
                     parentCommentId={root.id}
                     showVisibilityToggles={replyAs === "admin"}
+                    useTutorCommentLabels={useTutorCommentLabels}
                   />
                 )}
               </li>

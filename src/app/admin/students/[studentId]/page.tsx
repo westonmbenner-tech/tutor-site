@@ -134,6 +134,7 @@ export default async function AdminStudentDetailPage({
                     replyAs="admin"
                     showTopLevelComposer
                     studyLogId={log.id}
+                    useTutorCommentLabels
                   />
                 </StudyLogAdminEntry>
               ))}
@@ -186,6 +187,7 @@ export default async function AdminStudentDetailPage({
             currentUserId={profile.id}
             replyAs="admin"
             showTopLevelComposer
+            useTutorCommentLabels
           />
         </DashboardCard>
 

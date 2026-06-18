@@ -7,10 +7,12 @@ export function DeleteHomeworkPanel({
   homeworkId,
   homeworkTitle,
   redirectTo = "/admin/homework",
+  startInConfirmStep = false,
 }: {
   homeworkId: string;
   homeworkTitle: string;
   redirectTo?: string;
+  startInConfirmStep?: boolean;
 }) {
   return (
     <ConfirmRemovalPanel
@@ -23,6 +25,8 @@ export function DeleteHomeworkPanel({
       ]}
       redirectTo={redirectTo}
       onRemove={() => deleteHomework(homeworkId)}
+      startInConfirmStep={startInConfirmStep}
+      idleButtonLabel="assignment"
     />
   );
 }

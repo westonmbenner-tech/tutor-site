@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { TutorCommentList } from "@/components/TutorCommentBox";
-import { DeleteHomeworkPanel } from "@/components/admin/DeleteHomeworkPanel";
-import { EditHomeworkForm } from "@/components/admin/EditHomeworkForm";
+import { HomeworkAssignmentAdminActions } from "@/components/admin/HomeworkAssignmentAdminActions";
 import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 import { FormattedMultilineText } from "@/components/FormattedMultilineText";
 import type { HomeworkAssignment, TutorComment } from "@/lib/types";
@@ -96,14 +95,7 @@ export function HomeworkAssignmentDetail({
 
       <section className="rounded-xl border border-[var(--color-border)] bg-white p-5">
         <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-[var(--color-muted)]">
-          Edit assignment
-        </h2>
-        <EditHomeworkForm item={item} />
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-[var(--color-muted)]">
-          Tutor feedback
+          Tutor comments
         </h2>
         <TutorCommentList
           comments={comments}
@@ -112,20 +104,11 @@ export function HomeworkAssignmentDetail({
           replyAs="admin"
           showTopLevelComposer
           homeworkAssignmentId={item.id}
+          useTutorCommentLabels
         />
       </section>
 
-      <section className="rounded-xl border border-red-200 bg-red-50/40 p-5">
-        <h2 className="mb-2 text-sm font-medium text-slate-800">Delete assignment</h2>
-        <p className="mb-4 text-sm text-[var(--color-muted)]">
-          Permanently remove this homework assignment for the student.
-        </p>
-        <DeleteHomeworkPanel
-          homeworkId={item.id}
-          homeworkTitle={item.title}
-          redirectTo="/admin/homework"
-        />
-      </section>
+      <HomeworkAssignmentAdminActions item={item} />
     </div>
   );
 }
