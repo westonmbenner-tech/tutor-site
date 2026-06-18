@@ -25,7 +25,7 @@ export default async function AdminHomeworkDetailPage({
       .maybeSingle(),
     supabase
       .from("tutor_comments")
-      .select("*, profiles(full_name)")
+      .select("*, profiles(full_name, role)")
       .eq("homework_assignment_id", homeworkId)
       .order("created_at", { ascending: true }),
   ]);
@@ -52,6 +52,7 @@ export default async function AdminHomeworkDetailPage({
           item={resolved}
           studentName={studentName}
           comments={(comments ?? []) as TutorComment[]}
+          currentUserId={profile.id}
         />
       </DashboardCard>
     </AppShell>

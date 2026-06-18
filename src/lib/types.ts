@@ -93,12 +93,13 @@ export interface TutorComment {
   student_id: string;
   study_log_id: string | null;
   homework_assignment_id: string | null;
+  parent_comment_id: string | null;
   author_id: string;
   comment: string;
   visible_to_student: boolean;
   visible_to_parent: boolean;
   created_at: string;
-  profiles?: Pick<Profile, "full_name"> | null;
+  profiles?: Pick<Profile, "full_name" | "role"> | null;
 }
 
 export interface WeakArea {

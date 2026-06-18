@@ -62,7 +62,7 @@ export async function fetchStudentBundle(studentId: string) {
       .order("freeze_date", { ascending: false }),
     supabase
       .from("tutor_comments")
-      .select("*, profiles(full_name)")
+      .select("*, profiles(full_name, role)")
       .eq("student_id", studentId)
       .order("created_at", { ascending: false }),
     supabase

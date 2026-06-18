@@ -45,9 +45,14 @@ export const commentSchema = z.object({
   student_id: z.string().uuid(),
   study_log_id: z.string().uuid().optional().nullable(),
   homework_assignment_id: z.string().uuid().optional().nullable(),
+  parent_comment_id: z.string().uuid().optional().nullable(),
   comment: z.string().min(1),
   visible_to_student: z.coerce.boolean(),
   visible_to_parent: z.coerce.boolean(),
+});
+
+export const commentReplySchema = z.object({
+  comment: z.string().trim().min(1, "Reply cannot be empty."),
 });
 
 export const homeworkSubmissionSchema = z.object({

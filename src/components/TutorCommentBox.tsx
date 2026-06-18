@@ -3,7 +3,15 @@
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createTutorComment } from "@/app/actions/homework";
+import { CommentReplyForm, type CommentReplyRole } from "@/components/CommentReplyForm";
 import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
+import {
+  buildCommentThreads,
+  canReplyToComment,
+  commentAuthorLabel,
+  commentRoleLabel,
+} from "@/lib/comments";
+import type { TutorComment } from "@/lib/types";
 
 const initialState = { error: null as string | null, success: false };
 
@@ -67,36 +75,114 @@ export function TutorCommentBox({
   );
 }
 
+function CommentItem({
+  comment,
+  currentUserId,
+  indent = false,
+}: {
+  comment: TutorComment;
+  currentUserId?: string;
+  indent?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-lg border border-[var(--color-border)] bg-white p-3 ${
+        indent ? "ml-4 border-l-2 border-l-[var(--color-primary-light)]" : ""
+      }`}
+    >
+      <p className="whitespace-pre-wrap text-sm text-slate-700">{comment.comment}</p>
+      <p className="mt-2 text-xs text-[var(--color-muted)]">
+        {commentAuthorLabel(comment, currentUserId)} · {commentRoleLabel(comment)} ·{" "}
+        <DisplayDateTime iso={comment.created_at} variant="datetime" />
+      </p>
+    </div>
+  );
+}
+
 export function TutorCommentList({
   comments,
+  studentId,
+  currentUserId,
+  replyAs,
+  showTopLevelComposer = false,
+  studyLogId,
+  homeworkAssignmentId,
 }: {
-  comments: {
-    id: string;
-    comment: string;
-    created_at: string;
-    profiles?: { full_name: string | null } | null;
-    visible_to_student?: boolean;
-    visible_to_parent?: boolean;
-  }[];
+  comments: TutorComment[];
+  studentId?: string;
+  currentUserId?: string;
+  replyAs?: CommentReplyRole;
+  showTopLevelComposer?: boolean;
+  studyLogId?: string | null;
+  homeworkAssignmentId?: string | null;
 }) {
-  if (comments.length === 0) {
+  if (comments.length === 0 && !showTopLevelComposer) {
     return <div className="empty-state">No comments yet.</div>;
   }
 
+  const threads = buildCommentThreads(comments);
+  const canReply = Boolean(studentId && replyAs);
+
   return (
-    <ul className="space-y-3">
-      {comments.map((c) => (
-        <li
-          key={c.id}
-          className="rounded-lg border border-[var(--color-border)] bg-white p-4"
-        >
-          <p className="text-sm text-slate-700">{c.comment}</p>
-          <p className="mt-2 text-xs text-[var(--color-muted)]">
-            {c.profiles?.full_name ?? "Tutor"} ·{" "}
-            <DisplayDateTime iso={c.created_at} variant="datetime" />
-          </p>
-        </li>
-      ))}
-    </ul>
+    <div className="space-y-4">
+      {showTopLevelComposer && studentId && replyAs === "admin" && (
+        <TutorCommentBox
+          studentId={studentId}
+          studyLogId={studyLogId}
+          homeworkAssignmentId={homeworkAssignmentId}
+        />
+      )}
+
+      {threads.length === 0 ? (
+        <div className="empty-state">No comments yet.</div>
+      ) : (
+        <ul className="space-y-4">
+          {threads.map(({ root, replies }) => {
+            const rootReplyAllowed =
+              canReply && canReplyToComment(root, replyAs ?? "student");
+
+            return (
+              <li key={root.id} className="space-y-2">
+                <CommentItem comment={root} currentUserId={currentUserId} />
+                {replies.length > 0 && (
+                  <ul className="space-y-2">
+                    {replies.map((reply) => {
+                      const replyAllowed =
+                        canReply && canReplyToComment(reply, replyAs ?? "student");
+
+                      return (
+                        <li key={reply.id}>
+                          <CommentItem
+                            comment={reply}
+                            currentUserId={currentUserId}
+                            indent
+                          />
+                          {replyAllowed && studentId && (
+                            <CommentReplyForm
+                              studentId={studentId}
+                              parentCommentId={reply.id}
+                              showVisibilityToggles={replyAs === "admin"}
+                            />
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                {rootReplyAllowed && studentId && (
+                  <CommentReplyForm
+                    studentId={studentId}
+                    parentCommentId={root.id}
+                    showVisibilityToggles={replyAs === "admin"}
+                  />
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
+
+export type { CommentReplyRole };

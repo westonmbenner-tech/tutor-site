@@ -8,7 +8,6 @@ import { StudyLogAdminEntry } from "@/components/admin/StudyLogAdminEntry";
 import { MistakeList } from "@/components/MistakeList";
 import { AccuracyTrendChart, SimpleTrendChart } from "@/components/AccuracyTrendChart";
 import {
-  TutorCommentBox,
   TutorCommentList,
 } from "@/components/TutorCommentBox";
 import { AISummaryPanel } from "@/components/AISummaryPanel";
@@ -126,7 +125,16 @@ export default async function AdminStudentDetailPage({
             <ul className="space-y-3">
               {bundle.studyLogs.slice(0, 10).map((log) => (
                 <StudyLogAdminEntry key={log.id} log={log}>
-                  <TutorCommentBox studentId={studentId} studyLogId={log.id} />
+                  <TutorCommentList
+                    comments={bundle.comments.filter(
+                      (comment) => comment.study_log_id === log.id
+                    )}
+                    studentId={studentId}
+                    currentUserId={profile.id}
+                    replyAs="admin"
+                    showTopLevelComposer
+                    studyLogId={log.id}
+                  />
                 </StudyLogAdminEntry>
               ))}
             </ul>
@@ -169,7 +177,16 @@ export default async function AdminStudentDetailPage({
         </DashboardCard>
 
         <DashboardCard title="Tutor comments">
-          <TutorCommentList comments={bundle.comments} />
+          <TutorCommentList
+            comments={bundle.comments.filter(
+              (comment) =>
+                !comment.study_log_id && !comment.homework_assignment_id
+            )}
+            studentId={studentId}
+            currentUserId={profile.id}
+            replyAs="admin"
+            showTopLevelComposer
+          />
         </DashboardCard>
 
         <DashboardCard title="Parent links">

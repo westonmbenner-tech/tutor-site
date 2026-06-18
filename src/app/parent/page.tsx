@@ -85,7 +85,12 @@ export default async function ParentDashboardPage() {
                   <HomeworkList items={homework} />
                 </DashboardCard>
                 <DashboardCard title="Tutor comments">
-                  <TutorCommentList comments={parentComments} />
+                  <TutorCommentList
+                    comments={parentComments}
+                    studentId={bundle.student.id}
+                    currentUserId={profile.id}
+                    replyAs="parent"
+                  />
                 </DashboardCard>
               </div>
             </section>

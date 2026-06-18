@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { homeworkSchema, commentSchema, streakFreezeSchema, homeworkSubmissionSchema } from "@/lib/validations";
+import { homeworkSchema, commentSchema, commentReplySchema, streakFreezeSchema, homeworkSubmissionSchema } from "@/lib/validations";
 import { applyStreakFreezeWithBalance } from "@/lib/streak-freezes";
 import { revalidatePath } from "next/cache";
 import { getProfile, requireAdmin, canAccessStudent, getStudentForProfile, requireStudent } from "@/lib/auth";
@@ -181,13 +181,139 @@ export async function createTutorComment(
 
   if (error) return { error: error.message, success: false };
 
+  revalidateCommentPaths(studentId, parsed.data.homework_assignment_id);
+  return { error: null, success: true };
+}
+
+function revalidateCommentPaths(
+  studentId: string,
+  homeworkAssignmentId?: string | null
+) {
   revalidatePath("/admin");
+  revalidatePath(`/admin/students/${studentId}`);
   revalidatePath("/admin/homework");
-  if (parsed.data.homework_assignment_id) {
-    revalidatePath(`/admin/homework/${parsed.data.homework_assignment_id}`);
+  if (homeworkAssignmentId) {
+    revalidatePath(`/admin/homework/${homeworkAssignmentId}`);
   }
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/homework");
   revalidatePath("/parent");
+}
+
+async function getCommentThreadRoot(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  commentId: string
+) {
+  type CommentRow = {
+    id: string;
+    parent_comment_id: string | null;
+    visible_to_student: boolean;
+    visible_to_parent: boolean;
+    study_log_id: string | null;
+    homework_assignment_id: string | null;
+    student_id: string;
+  };
+
+  let currentId: string | null = commentId;
+  let current: CommentRow | null = null;
+
+  while (currentId) {
+    const { data } = await supabase
+      .from("tutor_comments")
+      .select(
+        "id, parent_comment_id, visible_to_student, visible_to_parent, study_log_id, homework_assignment_id, student_id"
+      )
+      .eq("id", currentId)
+      .maybeSingle();
+
+    if (!data) return null;
+    current = data as CommentRow;
+    currentId = current.parent_comment_id;
+  }
+
+  return current;
+}
+
+export async function replyToComment(
+  studentId: string,
+  parentCommentId: string,
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const profile = await getProfile();
+  if (!profile || !(await canAccessStudent(profile, studentId))) {
+    return { error: "Unauthorized", success: false };
+  }
+
+  const parsed = commentReplySchema.safeParse({
+    comment: formData.get("comment"),
+  });
+
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+      success: false,
+    };
+  }
+
+  const supabase = await createClient();
+
+  const { data: immediateParent } = await supabase
+    .from("tutor_comments")
+    .select(
+      "id, visible_to_student, visible_to_parent, student_id, study_log_id, homework_assignment_id"
+    )
+    .eq("id", parentCommentId)
+    .maybeSingle();
+
+  if (!immediateParent || immediateParent.student_id !== studentId) {
+    return { error: "Comment thread not found.", success: false };
+  }
+
+  const threadRoot = await getCommentThreadRoot(supabase, parentCommentId);
+
+  if (!threadRoot) {
+    return { error: "Comment thread not found.", success: false };
+  }
+
+  if (profile.role === "student" && !immediateParent.visible_to_student) {
+    return { error: "You cannot reply to this comment.", success: false };
+  }
+
+  if (profile.role === "parent" && !immediateParent.visible_to_parent) {
+    return { error: "You cannot reply to this comment.", success: false };
+  }
+
+  const visible_to_student =
+    profile.role === "admin"
+      ? formData.get("visible_to_student") === "on" ||
+        threadRoot.visible_to_student
+      : profile.role === "student"
+        ? true
+        : threadRoot.visible_to_student;
+
+  const visible_to_parent =
+    profile.role === "admin"
+      ? formData.get("visible_to_parent") === "on" ||
+        threadRoot.visible_to_parent
+      : profile.role === "parent"
+        ? true
+        : threadRoot.visible_to_parent;
+
+  const { error } = await supabase.from("tutor_comments").insert({
+    student_id: studentId,
+    study_log_id: immediateParent.study_log_id,
+    homework_assignment_id: immediateParent.homework_assignment_id,
+    parent_comment_id: parentCommentId,
+    author_id: profile.id,
+    comment: parsed.data.comment,
+    visible_to_student,
+    visible_to_parent,
+  });
+
+  if (error) return { error: error.message, success: false };
+
+  revalidateCommentPaths(studentId, immediateParent.homework_assignment_id);
   return { error: null, success: true };
 }
 

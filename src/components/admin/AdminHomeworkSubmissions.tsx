@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { TutorCommentBox, TutorCommentList } from "@/components/TutorCommentBox";
+import { TutorCommentList } from "@/components/TutorCommentBox";
 import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 import type { HomeworkAssignment, TutorComment } from "@/lib/types";
 
@@ -18,10 +18,12 @@ export function HomeworkAssignmentDetail({
   item,
   studentName,
   comments,
+  currentUserId,
 }: {
   item: ResolvedHomework;
   studentName: string;
   comments: TutorComment[];
+  currentUserId?: string;
 }) {
   const hasSubmission =
     Boolean(item.submission_text) || item.resolved_status === "completed";
@@ -92,15 +94,12 @@ export function HomeworkAssignmentDetail({
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-[var(--color-muted)]">
           Tutor feedback
         </h2>
-        {comments.length > 0 ? (
-          <div className="mb-4">
-            <TutorCommentList comments={comments} />
-          </div>
-        ) : (
-          <p className="mb-4 text-sm text-[var(--color-muted)]">No comments yet.</p>
-        )}
-        <TutorCommentBox
+        <TutorCommentList
+          comments={comments}
           studentId={item.student_id}
+          currentUserId={currentUserId}
+          replyAs="admin"
+          showTopLevelComposer
           homeworkAssignmentId={item.id}
         />
       </section>

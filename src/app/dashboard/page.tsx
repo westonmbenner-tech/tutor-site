@@ -126,7 +126,12 @@ export default async function StudentDashboardPage() {
           </DashboardCard>
 
           <DashboardCard title="Tutor comments">
-            <TutorCommentList comments={studentComments.slice(0, 5)} />
+            <TutorCommentList
+              comments={studentComments}
+              studentId={student.id}
+              currentUserId={profile.id}
+              replyAs="student"
+            />
           </DashboardCard>
         </div>
       </div>
