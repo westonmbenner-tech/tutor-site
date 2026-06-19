@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { homeworkSchema, homeworkUpdateSchema, commentSchema, commentReplySchema, streakFreezeSchema, homeworkSubmissionSchema } from "@/lib/validations";
+import { homeworkSchema, homeworkUpdateSchema, commentSchema, commentReplySchema, homeworkCommentSchema, streakFreezeSchema, homeworkSubmissionSchema } from "@/lib/validations";
 import { applyStreakFreezeWithBalance } from "@/lib/streak-freezes";
 import { notifyAdminHomeworkComment, notifyAdminHomeworkSubmission } from "@/lib/email/admin-notifications";
 import { revalidatePath } from "next/cache";
@@ -359,6 +359,96 @@ export async function createTutorComment(
   if (error) return { error: error.message, success: false };
 
   revalidateCommentPaths(studentId, parsed.data.homework_assignment_id);
+  return { error: null, success: true };
+}
+
+async function homeworkIsSubmitted(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  homeworkId: string,
+  studentId: string
+) {
+  const { data: homework } = await supabase
+    .from("homework_assignments")
+    .select("id, status, completed_at, submission_text")
+    .eq("id", homeworkId)
+    .eq("student_id", studentId)
+    .maybeSingle();
+
+  if (!homework) return false;
+
+  return (
+    homework.status === "completed" ||
+    Boolean(homework.completed_at) ||
+    Boolean(homework.submission_text?.trim())
+  );
+}
+
+export async function createHomeworkComment(
+  studentId: string,
+  homeworkAssignmentId: string,
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const profile = await getProfile();
+  if (!profile || !(await canAccessStudent(profile, studentId))) {
+    return { error: "Unauthorized", success: false };
+  }
+
+  if (profile.role !== "student" && profile.role !== "parent") {
+    return { error: "Unauthorized", success: false };
+  }
+
+  const parsed = homeworkCommentSchema.safeParse({
+    homework_assignment_id: homeworkAssignmentId,
+    comment: formData.get("comment"),
+  });
+
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+      success: false,
+    };
+  }
+
+  if (parsed.data.homework_assignment_id !== homeworkAssignmentId) {
+    return { error: "Invalid homework assignment.", success: false };
+  }
+
+  const supabase = await createClient();
+
+  if (!(await homeworkIsSubmitted(supabase, homeworkAssignmentId, studentId))) {
+    return {
+      error: "Comments are available after homework is submitted.",
+      success: false,
+    };
+  }
+
+  const visible_to_student = true;
+  const visible_to_parent = true;
+
+  const { error } = await supabase.from("tutor_comments").insert({
+    student_id: studentId,
+    homework_assignment_id: homeworkAssignmentId,
+    study_log_id: null,
+    parent_comment_id: null,
+    author_id: profile.id,
+    comment: parsed.data.comment,
+    visible_to_student,
+    visible_to_parent,
+  });
+
+  if (error) return { error: error.message, success: false };
+
+  notifyAdminHomeworkCommentForReply(
+    profile,
+    studentId,
+    homeworkAssignmentId,
+    parsed.data.comment
+  ).catch((emailError) => {
+    console.error("Homework comment email failed:", emailError);
+  });
+
+  revalidateCommentPaths(studentId, homeworkAssignmentId);
   return { error: null, success: true };
 }
 

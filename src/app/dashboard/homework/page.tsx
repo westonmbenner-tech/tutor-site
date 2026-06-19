@@ -26,7 +26,14 @@ export default async function StudentHomeworkPage() {
     <RoleAppShell profile={profile} userName={profile.full_name ?? student.display_name}>
       <h1 className="mb-6 text-2xl font-semibold text-slate-800">Homework</h1>
       <DashboardCard title="All assignments">
-        <HomeworkList items={bundle.homework} showCompleteButton />
+        <HomeworkList
+          items={bundle.homework}
+          showCompleteButton
+          comments={bundle.comments}
+          studentId={student.id}
+          currentUserId={profile.id}
+          replyAs="student"
+        />
       </DashboardCard>
     </RoleAppShell>
   );

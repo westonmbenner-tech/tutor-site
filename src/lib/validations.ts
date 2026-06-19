@@ -69,6 +69,14 @@ export const commentReplySchema = z.object({
     .pipe(z.string().min(1, "Reply cannot be empty.")),
 });
 
+export const homeworkCommentSchema = z.object({
+  homework_assignment_id: z.string().uuid(),
+  comment: z
+    .string()
+    .transform((value) => value.replace(/\r\n/g, "\n").trim())
+    .pipe(z.string().min(1, "Comment cannot be empty.")),
+});
+
 export const homeworkSubmissionSchema = z.object({
   submission_text: z
     .string()

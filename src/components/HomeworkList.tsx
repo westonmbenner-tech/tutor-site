@@ -1,9 +1,12 @@
 "use client";
 
-import type { HomeworkAssignment } from "@/lib/types";
+import type { HomeworkAssignment, TutorComment } from "@/lib/types";
 import { FormattedMultilineText } from "@/components/FormattedMultilineText";
 import { HomeworkCompleteForm } from "@/components/HomeworkCompleteForm";
 import { HomeworkSubmissionActions } from "@/components/HomeworkSubmissionActions";
+import { TutorCommentList } from "@/components/TutorCommentBox";
+import type { CommentReplyRole } from "@/components/CommentReplyForm";
+import { filterHomeworkComments } from "@/lib/comments";
 
 type ResolvedHomework = HomeworkAssignment & {
   resolved_status: "assigned" | "completed" | "late" | "missing";
@@ -19,9 +22,17 @@ const statusStyles: Record<string, string> = {
 export function HomeworkList({
   items,
   showCompleteButton = false,
+  comments = [],
+  studentId,
+  currentUserId,
+  replyAs,
 }: {
   items: ResolvedHomework[];
   showCompleteButton?: boolean;
+  comments?: TutorComment[];
+  studentId?: string;
+  currentUserId?: string;
+  replyAs?: CommentReplyRole;
 }) {
   if (items.length === 0) {
     return (
@@ -34,6 +45,18 @@ export function HomeworkList({
       {items.map((item) => {
         const hasSubmission =
           Boolean(item.submission_text) || item.resolved_status === "completed";
+        const showComments =
+          hasSubmission &&
+          Boolean(studentId && currentUserId && replyAs && replyAs !== "admin");
+        const homeworkComments =
+          showComments && studentId && currentUserId && replyAs
+            ? filterHomeworkComments(
+                comments,
+                item.id,
+                replyAs === "parent" ? "parent" : "student",
+                currentUserId
+              )
+            : [];
 
         return (
           <li
@@ -101,6 +124,20 @@ export function HomeworkList({
                 ) : (
                   <HomeworkCompleteForm item={item} />
                 )}
+              </div>
+            )}
+
+            {showComments && studentId && currentUserId && replyAs && (
+              <div className="mt-5 border-t border-[var(--color-border)] pt-4">
+                <p className="mb-3 text-sm font-medium text-slate-800">Comments</p>
+                <TutorCommentList
+                  comments={homeworkComments}
+                  studentId={studentId}
+                  currentUserId={currentUserId}
+                  replyAs={replyAs}
+                  homeworkAssignmentId={item.id}
+                  showHomeworkThreadStart
+                />
               </div>
             )}
           </li>

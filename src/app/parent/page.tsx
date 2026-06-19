@@ -95,7 +95,13 @@ export default async function ParentDashboardPage() {
                   <AccuracyTrendChart data={bundle.accuracyTrend} />
                 </DashboardCard>
                 <DashboardCard title="Homework">
-                  <HomeworkList items={homework} />
+                  <HomeworkList
+                    items={homework}
+                    comments={bundle.comments}
+                    studentId={bundle.student.id}
+                    currentUserId={profile.id}
+                    replyAs="parent"
+                  />
                 </DashboardCard>
                 <DashboardCard title="Tutor comments">
                   <TutorCommentList

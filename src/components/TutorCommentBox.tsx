@@ -4,6 +4,7 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createTutorComment } from "@/app/actions/homework";
 import { CommentReplyForm, type CommentReplyRole } from "@/components/CommentReplyForm";
+import { HomeworkCommentForm } from "@/components/HomeworkCommentForm";
 import { FormattedMultilineText } from "@/components/FormattedMultilineText";
 import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 import {
@@ -115,6 +116,7 @@ export function TutorCommentList({
   currentUserId,
   replyAs,
   showTopLevelComposer = false,
+  showHomeworkThreadStart = false,
   studyLogId,
   homeworkAssignmentId,
   useTutorCommentLabels = false,
@@ -125,22 +127,34 @@ export function TutorCommentList({
   currentUserId?: string;
   replyAs?: CommentReplyRole;
   showTopLevelComposer?: boolean;
+  showHomeworkThreadStart?: boolean;
   studyLogId?: string | null;
   homeworkAssignmentId?: string | null;
   useTutorCommentLabels?: boolean;
   useReplyLabelsForComposer?: boolean;
 }) {
-  if (comments.length === 0 && !showTopLevelComposer) {
+  if (
+    comments.length === 0 &&
+    !showTopLevelComposer &&
+    !showHomeworkThreadStart
+  ) {
     return <div className="empty-state">No comments yet.</div>;
   }
 
   const threads = buildCommentThreads(comments);
   const canReply = Boolean(studentId && replyAs);
-  const showComposer = showTopLevelComposer && studentId && replyAs === "admin";
+  const showAdminComposer =
+    showTopLevelComposer && studentId && replyAs === "admin";
+  const showHomeworkStartComposer =
+    showHomeworkThreadStart &&
+    studentId &&
+    homeworkAssignmentId &&
+    replyAs &&
+    replyAs !== "admin";
 
   return (
     <div className="space-y-4">
-      {threads.length === 0 && !showComposer ? (
+      {threads.length === 0 && !showAdminComposer && !showHomeworkStartComposer ? (
         <div className="empty-state">No comments yet.</div>
       ) : (
         <ul className="space-y-4">
@@ -181,12 +195,19 @@ export function TutorCommentList({
         </ul>
       )}
 
-      {showComposer && (
+      {showAdminComposer && (
         <TutorCommentBox
           studentId={studentId}
           studyLogId={studyLogId}
           homeworkAssignmentId={homeworkAssignmentId}
           useReplyLabels={useReplyLabelsForComposer}
+        />
+      )}
+
+      {showHomeworkStartComposer && threads.length === 0 && (
+        <HomeworkCommentForm
+          studentId={studentId}
+          homeworkAssignmentId={homeworkAssignmentId}
         />
       )}
     </div>

@@ -83,3 +83,19 @@ export function canReplyToComment(
   if (role === "parent") return comment.visible_to_parent;
   return false;
 }
+
+export function filterHomeworkComments(
+  comments: TutorComment[],
+  homeworkAssignmentId: string,
+  role: "student" | "parent",
+  currentUserId: string
+): TutorComment[] {
+  return comments.filter(
+    (comment) =>
+      comment.homework_assignment_id === homeworkAssignmentId &&
+      (comment.author_id === currentUserId ||
+        (role === "student"
+          ? comment.visible_to_student
+          : comment.visible_to_parent))
+  );
+}

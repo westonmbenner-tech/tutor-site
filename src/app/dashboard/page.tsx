@@ -114,12 +114,26 @@ export default async function StudentDashboardPage() {
               </Link>
             }
           >
-            <HomeworkList items={dueSoon.slice(0, 5)} showCompleteButton />
+            <HomeworkList
+              items={dueSoon.slice(0, 5)}
+              showCompleteButton
+              comments={bundle.comments}
+              studentId={student.id}
+              currentUserId={profile.id}
+              replyAs="student"
+            />
           </DashboardCard>
 
           {overdue.length > 0 && (
             <DashboardCard title="Late / missing">
-              <HomeworkList items={overdue} showCompleteButton />
+              <HomeworkList
+                items={overdue}
+                showCompleteButton
+                comments={bundle.comments}
+                studentId={student.id}
+                currentUserId={profile.id}
+                replyAs="student"
+              />
             </DashboardCard>
           )}
 
