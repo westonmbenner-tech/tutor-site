@@ -3,8 +3,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { homeworkSchema, homeworkUpdateSchema, commentSchema, commentReplySchema, streakFreezeSchema, homeworkSubmissionSchema } from "@/lib/validations";
 import { applyStreakFreezeWithBalance } from "@/lib/streak-freezes";
+import { notifyAdminHomeworkComment, notifyAdminHomeworkSubmission } from "@/lib/email/admin-notifications";
 import { revalidatePath } from "next/cache";
 import { getProfile, requireAdmin, canAccessStudent, getStudentForProfile, requireStudent } from "@/lib/auth";
+import type { Profile } from "@/lib/types";
 
 type ActionState = { error: string | null; success: boolean };
 
@@ -278,7 +280,7 @@ export async function completeHomework(
   const supabase = await createClient();
   const { data: hw } = await supabase
     .from("homework_assignments")
-    .select("student_id")
+    .select("student_id, title, due_date, students(display_name)")
     .eq("id", homeworkId)
     .single();
 
@@ -296,6 +298,24 @@ export async function completeHomework(
     .eq("id", homeworkId);
 
   if (error) return { error: error.message, success: false };
+
+  if (profile.role === "student") {
+    const studentName =
+      (hw.students as { display_name?: string } | null)?.display_name ??
+      profile.full_name ??
+      "Student";
+
+    notifyAdminHomeworkSubmission({
+      studentName,
+      homeworkTitle: hw.title,
+      dueDate: hw.due_date,
+      submissionText: parsed.data.submission_text,
+      homeworkId,
+      studentId: hw.student_id,
+    }).catch((emailError) => {
+      console.error("Homework submission email failed:", emailError);
+    });
+  }
 
   revalidateHomeworkPaths(homeworkId, hw.student_id);
   return { error: null, success: true };
@@ -391,6 +411,41 @@ async function getCommentThreadRoot(
   return current;
 }
 
+async function notifyAdminHomeworkCommentForReply(
+  profile: Profile,
+  studentId: string,
+  homeworkAssignmentId: string,
+  commentText: string
+) {
+  if (profile.role !== "student" && profile.role !== "parent") {
+    return;
+  }
+
+  const supabase = await createClient();
+  const { data: homework } = await supabase
+    .from("homework_assignments")
+    .select("id, title, students(display_name)")
+    .eq("id", homeworkAssignmentId)
+    .eq("student_id", studentId)
+    .maybeSingle();
+
+  if (!homework) return;
+
+  const studentName =
+    (homework.students as { display_name?: string } | null)?.display_name ??
+    "Student";
+  const authorName = profile.full_name?.trim() || studentName;
+
+  await notifyAdminHomeworkComment({
+    authorRole: profile.role,
+    authorName,
+    studentName,
+    homeworkTitle: homework.title,
+    commentText,
+    homeworkId: homework.id,
+  });
+}
+
 export async function replyToComment(
   studentId: string,
   parentCommentId: string,
@@ -469,6 +524,20 @@ export async function replyToComment(
   });
 
   if (error) return { error: error.message, success: false };
+
+  if (
+    (profile.role === "student" || profile.role === "parent") &&
+    immediateParent.homework_assignment_id
+  ) {
+    notifyAdminHomeworkCommentForReply(
+      profile,
+      studentId,
+      immediateParent.homework_assignment_id,
+      parsed.data.comment
+    ).catch((emailError) => {
+      console.error("Homework comment email failed:", emailError);
+    });
+  }
 
   revalidateCommentPaths(studentId, immediateParent.homework_assignment_id);
   return { error: null, success: true };
