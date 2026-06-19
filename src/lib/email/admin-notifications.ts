@@ -190,3 +190,46 @@ export async function notifyAdminHomeworkComment(
     "Homework comment email skipped"
   );
 }
+
+export interface MessageEmailPayload {
+  authorRole: "student" | "parent";
+  authorName: string;
+  studentName: string;
+  messageBody: string;
+  studentId: string;
+}
+
+function buildMessageEmail(payload: MessageEmailPayload) {
+  const threadUrl = `${getSiteOrigin()}/admin/messages/${payload.studentId}`;
+  const roleLabel = payload.authorRole === "student" ? "Student" : "Parent";
+
+  const text = [
+    `${payload.authorName} (${roleLabel}) sent a message about ${payload.studentName}.`,
+    "",
+    "Message:",
+    payload.messageBody,
+    "",
+    `View conversation: ${threadUrl}`,
+  ].join("\n");
+
+  const html = `
+    <p><strong>${escapeHtml(payload.authorName)}</strong> (${roleLabel}) sent a message about <strong>${escapeHtml(payload.studentName)}</strong>.</p>
+    <p><strong>Message:</strong></p>
+    <pre style="white-space:pre-wrap;font-family:inherit;background:#f8fafc;padding:12px;border-radius:8px;">${escapeHtml(
+      payload.messageBody
+    )}</pre>
+    <p><a href="${threadUrl}">View conversation in TutorCheck</a></p>
+  `.trim();
+
+  return {
+    subject: `New message from ${roleLabel.toLowerCase()}: ${payload.studentName}`,
+    text,
+    html,
+  };
+}
+
+export async function notifyAdminMessage(
+  payload: MessageEmailPayload
+): Promise<void> {
+  await sendAdminEmail(buildMessageEmail(payload), "Message email skipped");
+}

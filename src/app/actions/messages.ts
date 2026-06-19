@@ -1,11 +1,41 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { notifyAdminMessage } from "@/lib/email/admin-notifications";
 import { messageSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { getProfile, canAccessStudent } from "@/lib/auth";
+import type { Profile } from "@/lib/types";
 
 type ActionState = { error: string | null; success: boolean };
+
+async function notifyAdminMessageIfNeeded(
+  profile: Profile,
+  studentId: string,
+  messageBody: string
+) {
+  if (profile.role !== "student" && profile.role !== "parent") {
+    return;
+  }
+
+  const supabase = await createClient();
+  const { data: student } = await supabase
+    .from("students")
+    .select("display_name")
+    .eq("id", studentId)
+    .maybeSingle();
+
+  const studentName = student?.display_name ?? "Student";
+  const authorName = profile.full_name?.trim() || studentName;
+
+  await notifyAdminMessage({
+    authorRole: profile.role,
+    authorName,
+    studentName,
+    messageBody,
+    studentId,
+  });
+}
 
 export async function sendMessage(
   studentId: string,
@@ -36,6 +66,14 @@ export async function sendMessage(
   });
 
   if (error) return { error: error.message, success: false };
+
+  if (profile.role === "student" || profile.role === "parent") {
+    notifyAdminMessageIfNeeded(profile, studentId, parsed.data.body).catch(
+      (emailError) => {
+        console.error("Message email failed:", emailError);
+      }
+    );
+  }
 
   revalidatePath("/dashboard/messages");
   revalidatePath("/parent/messages");
