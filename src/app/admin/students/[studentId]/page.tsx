@@ -136,21 +136,24 @@ export default async function AdminStudentDetailPage({
             <div className="empty-state">No logs yet.</div>
           ) : (
             <ul className="space-y-3">
-              {bundle.studyLogs.slice(0, 10).map((log) => (
-                <StudyLogAdminEntry key={log.id} log={log}>
-                  <TutorCommentList
-                    comments={bundle.comments.filter(
-                      (comment) => comment.study_log_id === log.id
-                    )}
-                    studentId={studentId}
-                    currentUserId={profile.id}
-                    replyAs="admin"
-                    showTopLevelComposer
-                    studyLogId={log.id}
-                    useTutorCommentLabels
-                  />
-                </StudyLogAdminEntry>
-              ))}
+              {bundle.studyLogs.slice(0, 10).map((log) => {
+                const logComments = bundle.comments.filter(
+                  (comment) => comment.study_log_id === log.id
+                );
+
+                return (
+                  <StudyLogAdminEntry key={log.id} log={log}>
+                    <TutorCommentList
+                      comments={logComments}
+                      studentId={studentId}
+                      currentUserId={profile.id}
+                      replyAs="admin"
+                      showTopLevelComposer={logComments.length === 0}
+                      studyLogId={log.id}
+                    />
+                  </StudyLogAdminEntry>
+                );
+              })}
             </ul>
           )}
         </DashboardCard>
@@ -179,20 +182,6 @@ export default async function AdminStudentDetailPage({
           <AISummaryPanel
             studentId={studentId}
             summaries={bundle.aiSummaries}
-          />
-        </DashboardCard>
-
-        <DashboardCard title="Tutor comments">
-          <TutorCommentList
-            comments={bundle.comments.filter(
-              (comment) =>
-                !comment.study_log_id && !comment.homework_assignment_id
-            )}
-            studentId={studentId}
-            currentUserId={profile.id}
-            replyAs="admin"
-            showTopLevelComposer
-            useTutorCommentLabels
           />
         </DashboardCard>
 

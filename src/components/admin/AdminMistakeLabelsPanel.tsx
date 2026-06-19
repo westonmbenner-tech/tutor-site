@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 import {
   createMistakeLabel,
   deleteMistakeLabel,
@@ -117,14 +118,15 @@ export function AdminMistakeLabelsPanel({
   }, new Map());
 
   return (
-    <div className="mb-6 space-y-4 rounded-xl border border-[var(--color-border)] bg-slate-50/50 p-4">
-      <div>
-        <h3 className="text-sm font-medium text-slate-800">Mistake categories</h3>
-        <p className="mt-1 text-xs text-[var(--color-muted)]">
-          Add or remove categories for this student. Deleting a category leaves
-          its mistakes uncategorized.
-        </p>
-      </div>
+    <CollapsibleSection
+      title="Manage categories"
+      className="mb-6"
+      defaultOpen={false}
+    >
+      <p className="mb-4 text-xs text-[var(--color-muted)]">
+        Add or remove categories for this student. Deleting a category leaves
+        its mistakes uncategorized.
+      </p>
 
       <form action={formAction} className="flex flex-wrap items-end gap-3">
         <div className="form-group mb-0 min-w-[12rem] flex-1">
@@ -150,23 +152,23 @@ export function AdminMistakeLabelsPanel({
       </form>
 
       {state.error && (
-        <p className="text-sm text-[var(--color-danger)]">{state.error}</p>
+        <p className="mt-3 text-sm text-[var(--color-danger)]">{state.error}</p>
       )}
       {state.success && (
-        <p className="text-sm text-[var(--color-primary)]">Category added.</p>
+        <p className="mt-3 text-sm text-[var(--color-primary)]">Category added.</p>
       )}
 
       {labels.length === 0 ? (
-        <p className="text-sm text-[var(--color-muted)]">No categories yet.</p>
+        <p className="mt-4 text-sm text-[var(--color-muted)]">No categories yet.</p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="mt-4 space-y-2">
           {labels.map((label) => {
             const mistakeCount = countsByLabel.get(label.id) ?? 0;
 
             return (
               <li
                 key={label.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--color-border)] bg-white px-3 py-2"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--color-border)] bg-slate-50/50 px-3 py-2"
               >
                 <div className="text-sm text-slate-800">
                   <span className="font-medium">{label.name}</span>
@@ -184,6 +186,6 @@ export function AdminMistakeLabelsPanel({
           })}
         </ul>
       )}
-    </div>
+    </CollapsibleSection>
   );
 }

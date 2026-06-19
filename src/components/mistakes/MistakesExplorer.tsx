@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { LessonsLearnedByTag } from "@/components/LessonsLearnedByTag";
 import { MistakeList } from "@/components/MistakeList";
 import {
@@ -19,10 +20,6 @@ function MistakeLabelChips({
   selectedLabelFilter: string | null;
   onSelect: (labelFilter: string | null) => void;
 }) {
-  if (options.length === 0) {
-    return null;
-  }
-
   const chipClass = (active: boolean) =>
     `rounded-full px-3 py-1 text-sm transition-colors ${
       active
@@ -31,34 +28,29 @@ function MistakeLabelChips({
     }`;
 
   return (
-    <div className="space-y-2">
-      <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted)]">
-        Filter by label
-      </p>
-      <ul className="flex flex-wrap gap-2">
-        <li>
+    <ul className="flex flex-wrap gap-2">
+      <li>
+        <button
+          type="button"
+          onClick={() => onSelect(null)}
+          className={chipClass(selectedLabelFilter === null)}
+        >
+          All
+        </button>
+      </li>
+      {options.map((option) => (
+        <li key={option.id}>
           <button
             type="button"
-            onClick={() => onSelect(null)}
-            className={chipClass(selectedLabelFilter === null)}
+            onClick={() => onSelect(option.id)}
+            className={chipClass(selectedLabelFilter === option.id)}
           >
-            All
+            {option.name}
+            <span className="ml-1 opacity-80">({option.count})</span>
           </button>
         </li>
-        {options.map((option) => (
-          <li key={option.id}>
-            <button
-              type="button"
-              onClick={() => onSelect(option.id)}
-              className={chipClass(selectedLabelFilter === option.id)}
-            >
-              {option.name}
-              <span className="ml-1 opacity-80">({option.count})</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
+      ))}
+    </ul>
   );
 }
 
@@ -98,14 +90,26 @@ export function MistakesExplorer({
     ? `${listTitle}: ${selectedLabelName}`
     : listTitle;
 
+  const filterSummary =
+    selectedLabelName ??
+    (labelOptions.length > 0 ? "All categories" : "No categories");
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <MistakeLabelChips
-          options={labelOptions}
-          selectedLabelFilter={selectedLabelFilter}
-          onSelect={setSelectedLabelFilter}
-        />
+        {labelOptions.length > 0 ? (
+          <CollapsibleSection
+            title={`Filter by category · ${filterSummary}`}
+            className="min-w-[240px] flex-1"
+            defaultOpen={false}
+          >
+            <MistakeLabelChips
+              options={labelOptions}
+              selectedLabelFilter={selectedLabelFilter}
+              onSelect={setSelectedLabelFilter}
+            />
+          </CollapsibleSection>
+        ) : null}
         {mistakes.length > 0 && (
           <button
             type="button"
@@ -123,7 +127,7 @@ export function MistakesExplorer({
             <h3 className="mb-3 text-sm font-medium text-slate-800">
               {filteredTitle}
             </h3>
-            <MistakeList mistakes={filteredMistakes} emptyMessage="No mistakes match this label." />
+            <MistakeList mistakes={filteredMistakes} emptyMessage="No mistakes match this category." />
           </div>
           <div>
             <h3 className="mb-3 text-sm font-medium text-slate-800">
@@ -141,7 +145,7 @@ export function MistakesExplorer({
           <h3 className="mb-3 text-sm font-medium text-slate-800">
             {filteredTitle}
           </h3>
-          <MistakeList mistakes={filteredMistakes} emptyMessage="No mistakes match this label." />
+          <MistakeList mistakes={filteredMistakes} emptyMessage="No mistakes match this category." />
         </div>
       )}
     </div>
