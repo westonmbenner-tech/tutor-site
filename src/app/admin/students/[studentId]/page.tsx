@@ -5,7 +5,8 @@ import { DashboardCard, StatCard } from "@/components/DashboardCard";
 import { StreakProgress } from "@/components/StreakProgress";
 import { AdminHomeworkSubmissions } from "@/components/admin/AdminHomeworkSubmissions";
 import { StudyLogAdminEntry } from "@/components/admin/StudyLogAdminEntry";
-import { MistakeList } from "@/components/MistakeList";
+import { MistakesExplorer } from "@/components/mistakes/MistakesExplorer";
+import { AdminMistakeLabelsPanel } from "@/components/admin/AdminMistakeLabelsPanel";
 import { AccuracyTrendChart, SimpleTrendChart } from "@/components/AccuracyTrendChart";
 import {
   TutorCommentList,
@@ -161,25 +162,17 @@ export default async function AdminStudentDetailPage({
           />
         </DashboardCard>
 
-        <DashboardCard title="Mistakes">
-          <MistakeList mistakes={bundle.mistakes.slice(0, 15)} />
-        </DashboardCard>
-
-        <DashboardCard title="Mistake labels">
-          {bundle.labels.length === 0 ? (
-            <div className="empty-state">No labels yet.</div>
-          ) : (
-            <ul className="flex flex-wrap gap-2">
-              {bundle.labels.map((l) => (
-                <li
-                  key={l.id}
-                  className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700"
-                >
-                  {l.name}
-                </li>
-              ))}
-            </ul>
-          )}
+        <DashboardCard title="Mistakes" className="lg:col-span-2">
+          <AdminMistakeLabelsPanel
+            studentId={studentId}
+            labels={bundle.labels}
+            mistakes={bundle.mistakes}
+          />
+          <MistakesExplorer
+            mistakes={bundle.mistakes}
+            labels={bundle.labels}
+            studentName={bundle.student.display_name}
+          />
         </DashboardCard>
 
         <DashboardCard title="AI summaries">

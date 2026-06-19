@@ -32,6 +32,14 @@ export const mistakeSchema = z.object({
   study_log_id: z.string().uuid().optional().nullable(),
 });
 
+export const mistakeLabelSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Category name is required")
+    .max(100, "Category name is too long"),
+});
+
 export const homeworkSchema = z.object({
   student_id: z.string().uuid(),
   title: z.string().min(1, "Title is required"),

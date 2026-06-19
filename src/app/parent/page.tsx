@@ -4,6 +4,7 @@ import { DashboardCard, StatCard } from "@/components/DashboardCard";
 import { StreakProgress } from "@/components/StreakProgress";
 import { HomeworkList } from "@/components/HomeworkList";
 import { AccuracyTrendChart } from "@/components/AccuracyTrendChart";
+import { MistakesExplorer } from "@/components/mistakes/MistakesExplorer";
 import { TutorCommentList } from "@/components/TutorCommentBox";
 import { requireParent, getParentForProfile } from "@/lib/auth";
 import { fetchParentStudents } from "@/lib/data";
@@ -102,6 +103,14 @@ export default async function ParentDashboardPage() {
                     studentId={bundle.student.id}
                     currentUserId={profile.id}
                     replyAs="parent"
+                  />
+                </DashboardCard>
+                <DashboardCard title="Mistakes" className="lg:col-span-2">
+                  <MistakesExplorer
+                    mistakes={bundle.mistakes}
+                    labels={bundle.labels}
+                    studentName={bundle.student.display_name}
+                    showLessonsColumn
                   />
                 </DashboardCard>
               </div>

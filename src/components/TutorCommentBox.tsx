@@ -145,42 +145,32 @@ export function TutorCommentList({
       ) : (
         <ul className="space-y-4">
           {threads.map(({ root, replies }) => {
-            const rootReplyAllowed =
-              canReply && canReplyToComment(root, replyAs ?? "student");
+            const latestComment =
+              replies.length > 0 ? replies[replies.length - 1] : root;
+            const threadReplyAllowed =
+              canReply &&
+              canReplyToComment(latestComment, replyAs ?? "student");
 
             return (
               <li key={root.id} className="space-y-2">
                 <CommentItem comment={root} currentUserId={currentUserId} />
                 {replies.length > 0 && (
                   <ul className="space-y-2">
-                    {replies.map((reply) => {
-                      const replyAllowed =
-                        canReply && canReplyToComment(reply, replyAs ?? "student");
-
-                      return (
-                        <li key={reply.id}>
-                          <CommentItem
-                            comment={reply}
-                            currentUserId={currentUserId}
-                            indent
-                          />
-                          {replyAllowed && studentId && (
-                            <CommentReplyForm
-                              studentId={studentId}
-                              parentCommentId={reply.id}
-                              showVisibilityToggles={replyAs === "admin"}
-                              useTutorCommentLabels={useTutorCommentLabels}
-                            />
-                          )}
-                        </li>
-                      );
-                    })}
+                    {replies.map((reply) => (
+                      <li key={reply.id}>
+                        <CommentItem
+                          comment={reply}
+                          currentUserId={currentUserId}
+                          indent
+                        />
+                      </li>
+                    ))}
                   </ul>
                 )}
-                {rootReplyAllowed && studentId && (
+                {threadReplyAllowed && studentId && (
                   <CommentReplyForm
                     studentId={studentId}
-                    parentCommentId={root.id}
+                    parentCommentId={latestComment.id}
                     showVisibilityToggles={replyAs === "admin"}
                     useTutorCommentLabels={useTutorCommentLabels}
                   />

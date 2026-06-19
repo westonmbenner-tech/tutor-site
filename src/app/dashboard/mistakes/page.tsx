@@ -1,8 +1,7 @@
 import { RoleAppShell } from "@/components/layout/RoleAppShell";
 import { DashboardCard } from "@/components/DashboardCard";
 import { CollapsibleMistakeForm } from "@/components/CollapsibleMistakeForm";
-import { MistakeList } from "@/components/MistakeList";
-import { LessonsLearnedByTag } from "@/components/LessonsLearnedByTag";
+import { MistakesExplorer } from "@/components/mistakes/MistakesExplorer";
 import { requireStudent, getStudentForProfile } from "@/lib/auth";
 import { fetchStudentBundle } from "@/lib/data";
 
@@ -40,14 +39,14 @@ export default async function StudentLessonsLearnedPage() {
         />
       </DashboardCard>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <DashboardCard title="All mistakes">
-          <MistakeList mistakes={bundle.mistakes} />
-        </DashboardCard>
-        <DashboardCard title="Lessons learned">
-          <LessonsLearnedByTag mistakes={bundle.mistakes} />
-        </DashboardCard>
-      </div>
+      <DashboardCard title="Mistakes">
+        <MistakesExplorer
+          mistakes={bundle.mistakes}
+          labels={bundle.labels}
+          studentName={student.display_name}
+          showLessonsColumn
+        />
+      </DashboardCard>
     </RoleAppShell>
   );
 }

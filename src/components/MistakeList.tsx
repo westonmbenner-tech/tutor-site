@@ -1,8 +1,15 @@
 import type { Mistake } from "@/lib/types";
+import { getMistakeLabelName } from "@/lib/mistakes-utils";
 
-export function MistakeList({ mistakes }: { mistakes: Mistake[] }) {
+export function MistakeList({
+  mistakes,
+  emptyMessage = "No mistakes recorded yet.",
+}: {
+  mistakes: Mistake[];
+  emptyMessage?: string;
+}) {
   if (mistakes.length === 0) {
-    return <div className="empty-state">No mistakes recorded yet.</div>;
+    return <div className="empty-state">{emptyMessage}</div>;
   }
 
   return (
@@ -15,9 +22,9 @@ export function MistakeList({ mistakes }: { mistakes: Mistake[] }) {
           <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-muted)]">
             <span>{m.mistake_date}</span>
             {m.topic && <span>· {m.topic}</span>}
-            {(m.mistake_labels as { name?: string } | null)?.name && (
+            {getMistakeLabelName(m) !== "Uncategorized" && (
               <span className="rounded-full bg-white px-2 py-0.5 font-medium text-slate-600">
-                {(m.mistake_labels as { name: string }).name}
+                {getMistakeLabelName(m)}
               </span>
             )}
           </div>
