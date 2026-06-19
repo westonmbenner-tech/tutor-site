@@ -38,7 +38,7 @@ export function HomeworkSubmissionActions({
 
   if (editing) {
     return (
-      <form action={formAction} className="w-full min-w-[240px] max-w-md space-y-3">
+      <form action={formAction} className="w-full max-w-xl space-y-4">
         <div className="form-group mb-0">
           <label className="label" htmlFor={`edit-submission-${item.id}`}>
             Edit your submission
@@ -54,7 +54,7 @@ export function HomeworkSubmissionActions({
         {state.error && (
           <p className="text-sm text-[var(--color-danger)]">{state.error}</p>
         )}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3 pt-1">
           <button type="submit" disabled={pending} className="btn btn-primary text-sm">
             {pending ? "Saving…" : "Save changes"}
           </button>
@@ -71,8 +71,8 @@ export function HomeworkSubmissionActions({
   }
 
   return (
-    <div className="flex w-full min-w-[240px] max-w-md flex-col gap-3">
-      <div className="flex flex-wrap gap-2">
+    <div className="flex w-full max-w-xl flex-col gap-4">
+      <div className="flex flex-wrap gap-3">
         <button
           type="button"
           onClick={() => setEditing(true)}

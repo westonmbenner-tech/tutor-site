@@ -41,7 +41,7 @@ export function HomeworkCompleteForm({ item }: { item: ResolvedHomework }) {
   }
 
   return (
-    <form action={formAction} className="w-full min-w-[240px] max-w-md space-y-3">
+    <form action={formAction} className="w-full max-w-xl space-y-4">
       <div className="form-group mb-0">
         <label className="label" htmlFor={`submission-${item.id}`}>
           What did you complete?
@@ -60,7 +60,7 @@ export function HomeworkCompleteForm({ item }: { item: ResolvedHomework }) {
       {state.success && (
         <p className="text-sm text-[var(--color-primary)]">Homework submitted.</p>
       )}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3 pt-1">
         <button type="submit" disabled={pending} className="btn btn-primary text-sm">
           {pending ? "Submitting…" : "Submit homework"}
         </button>

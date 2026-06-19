@@ -7,10 +7,16 @@ interface AdminEmailContent {
 }
 
 function getSiteOrigin(): string {
-  return (
+  const origin =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    "https://tutor-check.com"
-  );
+    "https://www.tutor-check.com";
+
+  // Production canonical host is www; normalize bare domain for email links.
+  if (/^https?:\/\/tutor-check\.com$/i.test(origin)) {
+    return "https://www.tutor-check.com";
+  }
+
+  return origin;
 }
 
 function escapeHtml(value: string): string {

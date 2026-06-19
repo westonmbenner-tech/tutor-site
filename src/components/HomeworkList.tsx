@@ -30,40 +30,54 @@ export function HomeworkList({
   }
 
   return (
-    <ul className="divide-y divide-[var(--color-border)]">
-      {items.map((item) => (
-        <li key={item.id} className="py-4 first:pt-0 last:pb-0">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
+    <ul className="space-y-4">
+      {items.map((item) => {
+        const hasSubmission =
+          Boolean(item.submission_text) || item.resolved_status === "completed";
+
+        return (
+          <li
+            key={item.id}
+            className="rounded-xl border border-[var(--color-border)] bg-slate-50/50 p-4 sm:p-5"
+          >
+            <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="font-medium text-slate-800">{item.title}</h3>
+                <h3 className="text-base font-medium text-slate-800">
+                  {item.title}
+                </h3>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusStyles[item.resolved_status]}`}
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusStyles[item.resolved_status]}`}
                 >
                   {item.resolved_status}
                 </span>
               </div>
+
               {item.description && (
-                <p className="mt-1 text-sm text-[var(--color-muted)]">
+                <p className="text-sm leading-relaxed text-[var(--color-muted)]">
                   {item.description}
                 </p>
               )}
+
               {item.due_date && (
-                <p className="mt-1 text-xs text-[var(--color-muted)]">
+                <p className="text-sm text-[var(--color-muted)]">
                   Due {item.due_date}
                 </p>
               )}
+
               {item.submission_text && (
-                <div className="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
-                  <p className="font-medium">Your submission</p>
+                <div className="rounded-lg border border-[var(--color-border)] bg-white p-4">
+                  <p className="text-sm font-medium text-slate-800">
+                    {showCompleteButton ? "Your submission" : "Submission"}
+                  </p>
                   <FormattedMultilineText
                     text={item.submission_text}
-                    className="mt-1"
+                    className="mt-2 text-sm leading-relaxed text-slate-700"
                   />
                 </div>
               )}
+
               {Array.isArray(item.links) && item.links.length > 0 && (
-                <ul className="mt-2 space-y-1">
+                <ul className="space-y-1.5">
                   {item.links.map((link, i) => (
                     <li key={i}>
                       <a
@@ -79,15 +93,19 @@ export function HomeworkList({
                 </ul>
               )}
             </div>
-            {showCompleteButton &&
-              (item.submission_text || item.resolved_status === "completed" ? (
-                <HomeworkSubmissionActions item={item} />
-              ) : (
-                <HomeworkCompleteForm item={item} />
-              ))}
-          </div>
-        </li>
-      ))}
+
+            {showCompleteButton && (
+              <div className="mt-5 border-t border-[var(--color-border)] pt-4">
+                {hasSubmission ? (
+                  <HomeworkSubmissionActions item={item} />
+                ) : (
+                  <HomeworkCompleteForm item={item} />
+                )}
+              </div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
