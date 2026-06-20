@@ -9,8 +9,7 @@ const initialState = { error: null as string | null, success: false };
 export function MessageComposer({ studentId }: { studentId: string }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const boundAction = sendMessage.bind(null, studentId);
-  const [state, formAction, pending] = useActionState(boundAction, initialState);
+  const [state, formAction, pending] = useActionState(sendMessage, initialState);
 
   useEffect(() => {
     if (state.success) {
@@ -21,6 +20,7 @@ export function MessageComposer({ studentId }: { studentId: string }) {
 
   return (
     <form ref={formRef} action={formAction} className="space-y-3 border-t border-[var(--color-border)] pt-4">
+      <input type="hidden" name="student_id" value={studentId} />
       <div className="form-group mb-0">
         <label className="label sr-only" htmlFor={`message-body-${studentId}`}>
           Message

@@ -130,6 +130,7 @@ export const aiSummaryRequestSchema = z.object({
 });
 
 export const messageSchema = z.object({
+  student_id: z.string().uuid(),
   body: z
     .string()
     .trim()

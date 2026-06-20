@@ -38,16 +38,13 @@ async function notifyAdminMessageIfNeeded(
 }
 
 export async function sendMessage(
-  studentId: string,
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   const profile = await getProfile();
-  if (!profile || !(await canAccessStudent(profile, studentId))) {
-    return { error: "Unauthorized", success: false };
-  }
 
   const parsed = messageSchema.safeParse({
+    student_id: formData.get("student_id"),
     body: formData.get("body"),
   });
 
@@ -56,6 +53,12 @@ export async function sendMessage(
       error: parsed.error.issues[0]?.message ?? "Invalid message",
       success: false,
     };
+  }
+
+  const studentId = parsed.data.student_id;
+
+  if (!profile || !(await canAccessStudent(profile, studentId))) {
+    return { error: "Unauthorized", success: false };
   }
 
   const supabase = await createClient();
