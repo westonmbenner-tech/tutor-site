@@ -4,6 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { homeworkSchema, homeworkUpdateSchema, commentSchema, commentReplySchema, homeworkCommentSchema, streakFreezeSchema, homeworkSubmissionSchema } from "@/lib/validations";
 import { applyStreakFreezeWithBalance } from "@/lib/streak-freezes";
 import { notifyAdminHomeworkComment, notifyAdminHomeworkSubmission } from "@/lib/email/admin-notifications";
+import {
+  notifyStudentHomeworkAssigned,
+  notifyStudentHomeworkTutorComment,
+} from "@/lib/email/student-notifications";
+import { getStudentRecipient } from "@/lib/email/student-recipients";
 import { revalidatePath } from "next/cache";
 import { getProfile, requireAdmin, canAccessStudent, getStudentForProfile, requireStudent } from "@/lib/auth";
 import type { Profile } from "@/lib/types";
@@ -43,18 +48,34 @@ export async function createHomework(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("homework_assignments").insert({
-    student_id: parsed.data.student_id,
-    title: parsed.data.title,
-    description: parsed.data.description || null,
-    due_date: parsed.data.due_date || null,
-    links: parseJsonField(parsed.data.links),
-    attachments: parseJsonField(parsed.data.attachments),
-    created_by: profile?.id,
-    status: "assigned",
-  });
+  const { data: homework, error } = await supabase
+    .from("homework_assignments")
+    .insert({
+      student_id: parsed.data.student_id,
+      title: parsed.data.title,
+      description: parsed.data.description || null,
+      due_date: parsed.data.due_date || null,
+      links: parseJsonField(parsed.data.links),
+      attachments: parseJsonField(parsed.data.attachments),
+      created_by: profile?.id,
+      status: "assigned",
+    })
+    .select("id, title, description, due_date")
+    .single();
 
   if (error) return { error: error.message, success: false };
+
+  notifyStudentHomeworkAssignedIfPossible(
+    supabase,
+    parsed.data.student_id,
+    {
+      title: homework.title,
+      description: homework.description,
+      dueDate: homework.due_date,
+    }
+  ).catch((emailError) => {
+    console.error("Homework assigned email failed:", emailError);
+  });
 
   revalidatePath("/admin");
   revalidatePath("/admin/homework");
@@ -358,6 +379,20 @@ export async function createTutorComment(
 
   if (error) return { error: error.message, success: false };
 
+  if (
+    parsed.data.homework_assignment_id &&
+    parsed.data.visible_to_student
+  ) {
+    notifyStudentHomeworkTutorCommentIfPossible(
+      supabase,
+      studentId,
+      parsed.data.homework_assignment_id,
+      parsed.data.comment
+    ).catch((emailError) => {
+      console.error("Homework tutor comment email failed:", emailError);
+    });
+  }
+
   revalidateCommentPaths(studentId, parsed.data.homework_assignment_id);
   return { error: null, success: true };
 }
@@ -536,6 +571,53 @@ async function notifyAdminHomeworkCommentForReply(
   });
 }
 
+async function notifyStudentHomeworkAssignedIfPossible(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  studentId: string,
+  homework: {
+    title: string;
+    description: string | null;
+    dueDate: string | null;
+  }
+) {
+  const recipient = await getStudentRecipient(supabase, studentId);
+  if (!recipient) return;
+
+  await notifyStudentHomeworkAssigned({
+    studentEmail: recipient.email,
+    studentName: recipient.displayName,
+    homeworkTitle: homework.title,
+    description: homework.description,
+    dueDate: homework.dueDate,
+  });
+}
+
+async function notifyStudentHomeworkTutorCommentIfPossible(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  studentId: string,
+  homeworkAssignmentId: string,
+  commentText: string
+) {
+  const [recipient, homeworkResult] = await Promise.all([
+    getStudentRecipient(supabase, studentId),
+    supabase
+      .from("homework_assignments")
+      .select("title")
+      .eq("id", homeworkAssignmentId)
+      .eq("student_id", studentId)
+      .maybeSingle(),
+  ]);
+
+  if (!recipient || !homeworkResult.data) return;
+
+  await notifyStudentHomeworkTutorComment({
+    studentEmail: recipient.email,
+    studentName: recipient.displayName,
+    homeworkTitle: homeworkResult.data.title,
+    commentText,
+  });
+}
+
 export async function replyToComment(
   studentId: string,
   parentCommentId: string,
@@ -626,6 +708,21 @@ export async function replyToComment(
       parsed.data.comment
     ).catch((emailError) => {
       console.error("Homework comment email failed:", emailError);
+    });
+  }
+
+  if (
+    profile.role === "admin" &&
+    immediateParent.homework_assignment_id &&
+    visible_to_student
+  ) {
+    notifyStudentHomeworkTutorCommentIfPossible(
+      supabase,
+      studentId,
+      immediateParent.homework_assignment_id,
+      parsed.data.comment
+    ).catch((emailError) => {
+      console.error("Homework tutor comment email failed:", emailError);
     });
   }
 

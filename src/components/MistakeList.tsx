@@ -1,5 +1,29 @@
+"use client";
+
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 import type { Mistake } from "@/lib/types";
 import { getMistakeLabelName } from "@/lib/mistakes-utils";
+
+function mistakeTitle(m: Mistake): string {
+  const label = getMistakeLabelName(m);
+  const parts: string[] = [m.mistake_date];
+
+  if (m.topic) {
+    parts.push(m.topic);
+  } else if (m.question_prompt) {
+    const preview =
+      m.question_prompt.length > 72
+        ? `${m.question_prompt.slice(0, 72)}…`
+        : m.question_prompt;
+    parts.push(preview);
+  }
+
+  if (label !== "Uncategorized") {
+    parts.push(label);
+  }
+
+  return parts.join(" · ");
+}
 
 export function MistakeList({
   mistakes,
@@ -13,36 +37,39 @@ export function MistakeList({
   }
 
   return (
-    <ul className="space-y-3">
-      {mistakes.map((m) => (
-        <li
-          key={m.id}
-          className="rounded-lg border border-[var(--color-border)] bg-slate-50/50 p-4"
-        >
-          <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-muted)]">
-            <span>{m.mistake_date}</span>
-            {m.topic && <span>· {m.topic}</span>}
-            {getMistakeLabelName(m) !== "Uncategorized" && (
-              <span className="rounded-full bg-white px-2 py-0.5 font-medium text-slate-600">
-                {getMistakeLabelName(m)}
-              </span>
-            )}
-          </div>
-          {m.question_prompt && (
-            <p className="mt-2 text-sm font-medium text-slate-800">
-              {m.question_prompt}
-            </p>
-          )}
-          {m.explanation && (
-            <p className="mt-1 text-sm text-slate-600">{m.explanation}</p>
-          )}
-          {m.lesson_learned && (
-            <p className="mt-2 text-sm text-[var(--color-primary)]">
-              Lesson: {m.lesson_learned}
-            </p>
-          )}
-        </li>
-      ))}
+    <ul className="space-y-2">
+      {mistakes.map((m) => {
+        const label = getMistakeLabelName(m);
+
+        return (
+          <li key={m.id}>
+            <CollapsibleSection title={mistakeTitle(m)} defaultOpen={false}>
+              <div className="space-y-2 text-sm">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-muted)]">
+                  <span>{m.mistake_date}</span>
+                  {m.topic && <span>· {m.topic}</span>}
+                  {label !== "Uncategorized" && (
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
+                      {label}
+                    </span>
+                  )}
+                </div>
+                {m.question_prompt && (
+                  <p className="font-medium text-slate-800">{m.question_prompt}</p>
+                )}
+                {m.explanation && (
+                  <p className="text-slate-600">{m.explanation}</p>
+                )}
+                {m.lesson_learned && (
+                  <p className="text-[var(--color-primary)]">
+                    Lesson: {m.lesson_learned}
+                  </p>
+                )}
+              </div>
+            </CollapsibleSection>
+          </li>
+        );
+      })}
     </ul>
   );
 }

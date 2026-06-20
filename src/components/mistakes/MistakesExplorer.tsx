@@ -123,30 +123,33 @@ export function MistakesExplorer({
 
       {showLessonsColumn ? (
         <div className="grid gap-6 lg:grid-cols-2">
-          <div>
-            <h3 className="mb-3 text-sm font-medium text-slate-800">
-              {filteredTitle}
-            </h3>
-            <MistakeList mistakes={filteredMistakes} emptyMessage="No mistakes match this category." />
-          </div>
-          <div>
-            <h3 className="mb-3 text-sm font-medium text-slate-800">
-              Lessons learned
-            </h3>
+          <CollapsibleSection
+            title={`${filteredTitle} (${filteredMistakes.length})`}
+            defaultOpen={false}
+          >
+            <MistakeList
+              mistakes={filteredMistakes}
+              emptyMessage="No mistakes match this category."
+            />
+          </CollapsibleSection>
+          <CollapsibleSection title="Lessons learned" defaultOpen={false}>
             <LessonsLearnedByTag
               mistakes={mistakes}
               selectedLabelFilter={selectedLabelFilter}
               onLabelSelect={setSelectedLabelFilter}
             />
-          </div>
+          </CollapsibleSection>
         </div>
       ) : (
-        <div>
-          <h3 className="mb-3 text-sm font-medium text-slate-800">
-            {filteredTitle}
-          </h3>
-          <MistakeList mistakes={filteredMistakes} emptyMessage="No mistakes match this category." />
-        </div>
+        <CollapsibleSection
+          title={`${filteredTitle} (${filteredMistakes.length})`}
+          defaultOpen={false}
+        >
+          <MistakeList
+            mistakes={filteredMistakes}
+            emptyMessage="No mistakes match this category."
+          />
+        </CollapsibleSection>
       )}
     </div>
   );

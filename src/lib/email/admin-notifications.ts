@@ -1,93 +1,4 @@
-const RESEND_API_URL = "https://api.resend.com/emails";
-
-interface AdminEmailContent {
-  subject: string;
-  text: string;
-  html: string;
-}
-
-function getSiteOrigin(): string {
-  const origin =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    "https://www.tutor-check.com";
-
-  // Production canonical host is www; normalize bare domain for email links.
-  if (/^https?:\/\/tutor-check\.com$/i.test(origin)) {
-    return "https://www.tutor-check.com";
-  }
-
-  return origin;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function getEmailConfig():
-  | { adminEmail: string; apiKey: string; fromEmail: string }
-  | { error: string } {
-  const adminEmail = process.env.ADMIN_UPDATE_EMAIL?.trim();
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  const fromEmail = process.env.EMAIL_FROM?.trim();
-
-  if (!adminEmail) {
-    return { error: "ADMIN_UPDATE_EMAIL not configured" };
-  }
-
-  if (!apiKey) {
-    return { error: "RESEND_API_KEY not configured" };
-  }
-
-  if (!fromEmail) {
-    return { error: "EMAIL_FROM not configured" };
-  }
-
-  return { adminEmail, apiKey, fromEmail };
-}
-
-async function sendAdminEmail(
-  content: AdminEmailContent,
-  logContext: string
-): Promise<{ sent: boolean; error?: string }> {
-  const config = getEmailConfig();
-  if ("error" in config) {
-    console.warn(`${logContext}: ${config.error}`);
-    return { sent: false, error: config.error };
-  }
-
-  try {
-    const response = await fetch(RESEND_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${config.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: config.fromEmail,
-        to: [config.adminEmail],
-        subject: content.subject,
-        text: content.text,
-        html: content.html,
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      console.error(`${logContext}:`, body);
-      return { sent: false, error: body };
-    }
-
-    return { sent: true };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown email error";
-    console.error(`${logContext}:`, message);
-    return { sent: false, error: message };
-  }
-}
+import { escapeHtml, getSiteOrigin, sendEmail } from "@/lib/email/resend";
 
 export interface HomeworkSubmissionEmailPayload {
   studentName: string;
@@ -182,7 +93,14 @@ function buildHomeworkCommentEmail(payload: HomeworkCommentEmailPayload) {
 export async function notifyAdminHomeworkSubmission(
   payload: HomeworkSubmissionEmailPayload
 ): Promise<void> {
-  await sendAdminEmail(
+  const adminEmail = process.env.ADMIN_UPDATE_EMAIL?.trim();
+  if (!adminEmail) {
+    console.warn("Homework submission email skipped: ADMIN_UPDATE_EMAIL not configured");
+    return;
+  }
+
+  await sendEmail(
+    [adminEmail],
     buildHomeworkSubmissionEmail(payload),
     "Homework submission email skipped"
   );
@@ -191,7 +109,14 @@ export async function notifyAdminHomeworkSubmission(
 export async function notifyAdminHomeworkComment(
   payload: HomeworkCommentEmailPayload
 ): Promise<void> {
-  await sendAdminEmail(
+  const adminEmail = process.env.ADMIN_UPDATE_EMAIL?.trim();
+  if (!adminEmail) {
+    console.warn("Homework comment email skipped: ADMIN_UPDATE_EMAIL not configured");
+    return;
+  }
+
+  await sendEmail(
+    [adminEmail],
     buildHomeworkCommentEmail(payload),
     "Homework comment email skipped"
   );
@@ -237,5 +162,15 @@ function buildMessageEmail(payload: MessageEmailPayload) {
 export async function notifyAdminMessage(
   payload: MessageEmailPayload
 ): Promise<void> {
-  await sendAdminEmail(buildMessageEmail(payload), "Message email skipped");
+  const adminEmail = process.env.ADMIN_UPDATE_EMAIL?.trim();
+  if (!adminEmail) {
+    console.warn("Message email skipped: ADMIN_UPDATE_EMAIL not configured");
+    return;
+  }
+
+  await sendEmail(
+    [adminEmail],
+    buildMessageEmail(payload),
+    "Message email skipped"
+  );
 }
