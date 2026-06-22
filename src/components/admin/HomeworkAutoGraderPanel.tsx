@@ -7,7 +7,7 @@ import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 import { FormattedMultilineText } from "@/components/FormattedMultilineText";
 import type { HomeworkAiGrading } from "@/lib/types";
 
-type SourceType = "image" | "url";
+type SourceType = "image" | "url" | "text";
 
 function GradingResultCard({ grading }: { grading: HomeworkAiGrading }) {
   const correctCount = grading.questions.filter((question) => question.correct).length;
@@ -117,8 +117,9 @@ export function HomeworkAutoGraderPanel({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [sourceType, setSourceType] = useState<SourceType>("url");
+  const [sourceType, setSourceType] = useState<SourceType>("text");
   const [questionUrl, setQuestionUrl] = useState("");
+  const [questionText, setQuestionText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -140,6 +141,8 @@ export function HomeworkAutoGraderPanel({
 
       if (sourceType === "url") {
         formData.set("question_url", questionUrl.trim());
+      } else if (sourceType === "text") {
+        formData.set("question_text", questionText.trim());
       } else {
         const input = event.currentTarget.elements.namedItem(
           "question_images"
@@ -166,6 +169,7 @@ export function HomeworkAutoGraderPanel({
 
       setOpen(false);
       setQuestionUrl("");
+      setQuestionText("");
       router.refresh();
     } catch (submitError) {
       setError(
@@ -186,8 +190,8 @@ export function HomeworkAutoGraderPanel({
             AI auto grading
           </h2>
           <p className="mt-2 text-sm text-[var(--color-muted)]">
-            Compare the student submission against uploaded question images or a
-            question link. Each run is saved separately for resubmissions.
+            Compare the student submission against pasted question text, a question
+            link, or uploaded images. Each run is saved separately for resubmissions.
           </p>
         </div>
         <button
@@ -216,6 +220,16 @@ export function HomeworkAutoGraderPanel({
               <input
                 type="radio"
                 name="source_type"
+                value="text"
+                checked={sourceType === "text"}
+                onChange={() => setSourceType("text")}
+              />
+              Paste question text
+            </label>
+            <label className="mr-4 inline-flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="source_type"
                 value="url"
                 checked={sourceType === "url"}
                 onChange={() => setSourceType("url")}
@@ -234,7 +248,21 @@ export function HomeworkAutoGraderPanel({
             </label>
           </fieldset>
 
-          {sourceType === "url" ? (
+          {sourceType === "text" ? (
+            <div className="form-group mb-0">
+              <label className="label" htmlFor="question-text">
+                Questions and answer key
+              </label>
+              <textarea
+                id="question-text"
+                value={questionText}
+                onChange={(event) => setQuestionText(event.target.value)}
+                rows={8}
+                required
+                placeholder="Paste the worksheet questions here. Include correct answers if you have them."
+              />
+            </div>
+          ) : sourceType === "url" ? (
             <div className="form-group mb-0">
               <label className="label" htmlFor="question-url">
                 Question page URL

@@ -9,6 +9,7 @@ import type { HomeworkAiGrading } from "@/lib/types";
 
 const MAX_IMAGES = 5;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_QUESTION_TEXT_CHARS = 20000;
 const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -31,9 +32,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Homework ID is required." }, { status: 400 });
     }
 
-    if (sourceType !== "image" && sourceType !== "url") {
+    if (sourceType !== "image" && sourceType !== "url" && sourceType !== "text") {
       return NextResponse.json(
-        { error: "Question source type must be image or url." },
+        { error: "Question source type must be image, url, or text." },
         { status: 400 }
       );
     }
@@ -61,11 +62,24 @@ export async function POST(request: Request) {
 
     let sourceLabel = "";
     let questionUrl: string | undefined;
+    let questionText: string | undefined;
     let questionImages:
       | { mimeType: string; base64: string; name: string }[]
       | undefined;
 
-    if (sourceType === "url") {
+    if (sourceType === "text") {
+      const text = formData.get("question_text");
+      if (typeof text !== "string" || !text.trim()) {
+        return NextResponse.json(
+          { error: "Question text is required." },
+          { status: 400 }
+        );
+      }
+
+      questionText = text.replace(/\r\n/g, "\n").trim().slice(0, MAX_QUESTION_TEXT_CHARS);
+      const preview = questionText.replace(/\s+/g, " ").slice(0, 60);
+      sourceLabel = preview.length < questionText.length ? `${preview}…` : preview;
+    } else if (sourceType === "url") {
       const url = formData.get("question_url");
       if (typeof url !== "string" || !url.trim()) {
         return NextResponse.json(
@@ -141,6 +155,7 @@ export async function POST(request: Request) {
       sourceType,
       sourceLabel,
       questionUrl,
+      questionText,
       questionImages,
     });
 

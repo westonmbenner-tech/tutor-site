@@ -50,7 +50,7 @@ export interface HomeworkAiGrading {
   created_at: string;
   created_by: string | null;
   submission_snapshot: string | null;
-  source_type: "image" | "url";
+  source_type: "image" | "url" | "text";
   source_label: string;
   overall_summary: string;
   questions: HomeworkAiQuestionResult[];

@@ -33,7 +33,7 @@ export function parseHomeworkAiGradings(raw: unknown): HomeworkAiGrading[] {
       const row = entry as Record<string, unknown>;
       if (typeof row.id !== "string") return null;
       if (typeof row.created_at !== "string") return null;
-      if (row.source_type !== "image" && row.source_type !== "url") return null;
+      if (row.source_type !== "image" && row.source_type !== "url" && row.source_type !== "text") return null;
       if (typeof row.source_label !== "string") return null;
       if (typeof row.overall_summary !== "string") return null;
       if (typeof row.missed_questions_summary !== "string") return null;

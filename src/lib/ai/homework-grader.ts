@@ -6,15 +6,17 @@ import type {
 import type { HomeworkAiGrading, HomeworkAiQuestionResult } from "@/lib/types";
 
 const MAX_URL_CONTENT_CHARS = 12000;
+const MAX_QUESTION_TEXT_CHARS = 20000;
 const GRADING_MODEL = "gpt-4o-mini";
 
 export interface GradeHomeworkInput {
   homeworkTitle: string;
   homeworkDescription: string | null;
   studentSubmission: string;
-  sourceType: "image" | "url";
+  sourceType: "image" | "url" | "text";
   sourceLabel: string;
   questionUrl?: string;
+  questionText?: string;
   questionImages?: { mimeType: string; base64: string; name: string }[];
 }
 
@@ -169,6 +171,11 @@ export async function gradeHomeworkWithAi(
         error instanceof Error ? error.message : "Could not fetch question URL.";
       questionSourceText = `Question link could not be fetched automatically (${message}). Use the URL context if present in the assignment description. URL: ${input.questionUrl}`;
     }
+  } else if (input.sourceType === "text") {
+    if (!input.questionText?.trim()) {
+      throw new Error("Question text is required.");
+    }
+    questionSourceText = input.questionText.trim().slice(0, MAX_QUESTION_TEXT_CHARS);
   }
 
   const userContent: ChatCompletionContentPart[] = [
