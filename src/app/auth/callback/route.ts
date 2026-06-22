@@ -68,7 +68,7 @@ export async function GET(request: Request) {
       set: (name, value, options) => {
         loginCookiesToApply.push({ name, value, options });
       },
-    });
+    }, user.last_sign_in_at);
   }
 
   let destination = "/onboarding";

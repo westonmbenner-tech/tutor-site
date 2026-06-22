@@ -4,6 +4,7 @@ import { CreateHomeworkForm } from "@/components/admin/CreateHomeworkForm";
 import { AdminHomeworkList } from "@/components/admin/AdminHomeworkSubmissions";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeHomeworkRows } from "@/lib/homework-ai-gradings";
 import { resolveHomeworkStatuses } from "@/lib/streak";
 import type { HomeworkAssignment, Student } from "@/lib/types";
 
@@ -20,7 +21,7 @@ export default async function AdminHomeworkPage() {
   ]);
 
   const resolved = resolveHomeworkStatuses(
-    (homework ?? []) as HomeworkAssignment[]
+    normalizeHomeworkRows((homework ?? []) as HomeworkAssignment[])
   );
 
   return (

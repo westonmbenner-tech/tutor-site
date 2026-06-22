@@ -1,5 +1,4 @@
 export const SESSION_LOGIN_COOKIE = "tc_session_login";
-export const NOTIFICATION_BASELINE_COOKIE = "tc_notif_baseline";
 
 const MAX_LOGIN_HISTORY = 50;
 

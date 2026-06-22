@@ -4,12 +4,12 @@ import Link from "next/link";
 
 export function OverviewNotificationBanner({
   notifications,
-  overviewHref,
   messagesHref,
+  commentsHref,
 }: {
   notifications: NotificationSummary;
-  overviewHref: string;
   messagesHref: string;
+  commentsHref: string;
 }) {
   if (!hasNotifications(notifications)) {
     return null;
@@ -44,7 +44,7 @@ export function OverviewNotificationBanner({
         )}
         {notifications.newMessages > 0 && notifications.newComments > 0 ? " · " : null}
         {notifications.newComments > 0 && (
-          <Link href={overviewHref} className="text-[var(--color-primary)] hover:underline">
+          <Link href={commentsHref} className="text-[var(--color-primary)] hover:underline">
             View comments
           </Link>
         )}

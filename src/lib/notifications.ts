@@ -1,6 +1,5 @@
-import { cookies } from "next/headers";
 import { getParentForProfile, getStudentForProfile } from "@/lib/auth";
-import { NOTIFICATION_BASELINE_COOKIE } from "@/lib/login-history";
+import { parseLoginHistory } from "@/lib/login-history";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile, UserRole } from "@/lib/types";
 
@@ -31,19 +30,22 @@ function withBadges(
   }
 
   if (summary.newComments > 0) {
-    if (role === "student") navBadges["/dashboard"] = summary.newComments;
-    if (role === "parent") navBadges["/parent"] = summary.newComments;
-    if (role === "admin") navBadges["/admin"] = summary.newComments;
+    if (role === "student") {
+      navBadges["/dashboard#tutor-comments"] = summary.newComments;
+    }
+    if (role === "parent") {
+      navBadges["/parent#tutor-comments"] = summary.newComments;
+    }
+    if (role === "admin") navBadges["/admin/homework"] = summary.newComments;
   }
 
   return { ...summary, navBadges };
 }
 
-async function getBaseline(): Promise<string | null> {
-  const cookieStore = await cookies();
-  const value = cookieStore.get(NOTIFICATION_BASELINE_COOKIE)?.value;
-  if (!value) return null;
-  return value;
+function getNotificationBaseline(profile: Profile): string | null {
+  const history = parseLoginHistory(profile.login_history);
+  // history[0] is this session's login; history[1] is the previous visit.
+  return history[1] ?? null;
 }
 
 async function countNewMessages(
@@ -133,7 +135,7 @@ async function getStudentIdsForProfile(profile: Profile): Promise<string[]> {
 export async function getNotificationSummary(
   profile: Profile
 ): Promise<NotificationSummary> {
-  const baseline = await getBaseline();
+  const baseline = getNotificationBaseline(profile);
   const studentIds = await getStudentIdsForProfile(profile);
 
   if (studentIds.length === 0 && profile.role !== "admin") {

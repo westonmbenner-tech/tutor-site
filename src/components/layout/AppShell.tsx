@@ -64,16 +64,27 @@ export function AppShell({
               <p className="font-medium text-slate-800">{userName}</p>
             </div>
             <nav className="flex flex-wrap gap-1">
-              {links.map((link) => (
+              {links.map((link) => {
+                const badgeCount =
+                  navBadges[link.href] ??
+                  (link.href === "/dashboard"
+                    ? navBadges["/dashboard#tutor-comments"]
+                    : link.href === "/parent"
+                      ? navBadges["/parent#tutor-comments"]
+                      : undefined) ??
+                  0;
+
+                return (
                 <Link
                   key={link.href}
                   href={link.href}
                   className="inline-flex items-center rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
                 >
                   {link.label}
-                  <NavBadge count={navBadges[link.href] ?? 0} />
+                  <NavBadge count={badgeCount} />
                 </Link>
-              ))}
+                );
+              })}
             </nav>
             <div className="flex flex-wrap items-center gap-3">
               <TimezoneSelector />

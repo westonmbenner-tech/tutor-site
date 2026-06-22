@@ -5,6 +5,7 @@ import {
   resolveHomeworkStatuses,
   formatDateISO,
 } from "@/lib/streak";
+import { normalizeHomeworkRows } from "@/lib/homework-ai-gradings";
 import {
   aggregateStudyStats,
   buildAccuracyTrend,
@@ -78,7 +79,7 @@ export async function fetchStudentBundle(studentId: string) {
   const progress = computeWeeklyProgress(studyLogs, streakFreezes);
   const streakCount = computeWeeklyStreak(studyLogs, streakFreezes);
   const resolvedHomework = resolveHomeworkStatuses(
-    (homework ?? []) as HomeworkAssignment[]
+    normalizeHomeworkRows((homework ?? []) as HomeworkAssignment[])
   );
   const stats = aggregateStudyStats(studyLogs);
   const accuracyTrend = buildAccuracyTrend(studyLogs);

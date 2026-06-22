@@ -56,7 +56,7 @@ export async function middleware(request: NextRequest) {
       set: (name, value, options) => {
         sessionResponse.cookies.set(name, value, options);
       },
-    });
+    }, user.last_sign_in_at);
 
     const { data: profile } = await supabase
       .from("profiles")

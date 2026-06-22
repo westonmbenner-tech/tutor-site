@@ -6,6 +6,7 @@ import { HomeworkAssignmentDetail } from "@/components/admin/AdminHomeworkSubmis
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { resolveHomeworkStatuses } from "@/lib/streak";
+import { parseHomeworkAiGradings } from "@/lib/homework-ai-gradings";
 import type { HomeworkAssignment, TutorComment } from "@/lib/types";
 
 export default async function AdminHomeworkDetailPage({
@@ -32,7 +33,14 @@ export default async function AdminHomeworkDetailPage({
 
   if (!homework) notFound();
 
-  const resolved = resolveHomeworkStatuses([homework as HomeworkAssignment])[0];
+  const homeworkWithGradings = {
+    ...(homework as HomeworkAssignment),
+    ai_gradings: parseHomeworkAiGradings(
+      (homework as HomeworkAssignment & { ai_gradings?: unknown }).ai_gradings
+    ),
+  };
+
+  const resolved = resolveHomeworkStatuses([homeworkWithGradings])[0];
   const studentName =
     (homework as HomeworkAssignment & { students?: { display_name: string } })
       .students?.display_name ?? "Student";

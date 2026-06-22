@@ -37,6 +37,26 @@ export interface ParentStudentLink {
   created_at: string;
 }
 
+export interface HomeworkAiQuestionResult {
+  question_number: number;
+  question_text: string;
+  student_answer: string | null;
+  correct: boolean;
+  feedback: string;
+}
+
+export interface HomeworkAiGrading {
+  id: string;
+  created_at: string;
+  created_by: string | null;
+  submission_snapshot: string | null;
+  source_type: "image" | "url";
+  source_label: string;
+  overall_summary: string;
+  questions: HomeworkAiQuestionResult[];
+  missed_questions_summary: string;
+}
+
 export interface HomeworkAssignment {
   id: string;
   student_id: string;
@@ -50,6 +70,7 @@ export interface HomeworkAssignment {
   created_at: string;
   completed_at: string | null;
   submission_text: string | null;
+  ai_gradings: HomeworkAiGrading[];
 }
 
 export interface StudyLog {

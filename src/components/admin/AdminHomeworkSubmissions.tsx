@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { TutorCommentList } from "@/components/TutorCommentBox";
+import { HomeworkAutoGraderPanel } from "@/components/admin/HomeworkAutoGraderPanel";
 import { HomeworkAssignmentAdminActions } from "@/components/admin/HomeworkAssignmentAdminActions";
 import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 import { FormattedMultilineText } from "@/components/FormattedMultilineText";
@@ -93,6 +94,14 @@ export function HomeworkAssignmentDetail({
         )}
       </section>
 
+      {hasSubmission && item.submission_text && (
+        <HomeworkAutoGraderPanel
+          homeworkId={item.id}
+          hasSubmissionText={Boolean(item.submission_text?.trim())}
+          gradings={item.ai_gradings ?? []}
+        />
+      )}
+
       <section className="rounded-xl border border-[var(--color-border)] bg-white p-5">
         <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-[var(--color-muted)]">
           Tutor comments
@@ -150,7 +159,9 @@ export function AdminHomeworkList({
                   href={`/admin/homework/${item.id}`}
                   className="shrink-0 text-sm text-[var(--color-accent)]"
                 >
-                  View submission →
+                  {item.ai_gradings?.length
+                    ? `Review · ${item.ai_gradings.length} AI grade${item.ai_gradings.length === 1 ? "" : "s"} →`
+                    : "View submission →"}
                 </Link>
               )}
             </div>

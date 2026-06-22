@@ -1,7 +1,4 @@
-import {
-  NOTIFICATION_BASELINE_COOKIE,
-  SESSION_LOGIN_COOKIE,
-} from "@/lib/login-history";
+import { SESSION_LOGIN_COOKIE } from "@/lib/login-history";
 
 const SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 
@@ -25,26 +22,25 @@ type CookieSetter = {
 export async function recordLoginIfNeeded(
   supabase: { rpc: (fn: string) => PromiseLike<{ data: string | null; error: { message: string } | null }> },
   cookieStore: CookieStore,
-  setCookie: CookieSetter
+  setCookie: CookieSetter,
+  lastSignInAt?: string | null
 ): Promise<void> {
-  if (cookieStore.get(SESSION_LOGIN_COOKIE)?.value) {
+  if (!lastSignInAt) {
     return;
   }
 
-  const { data: previousLogin, error } = await supabase.rpc("record_user_login");
+  if (cookieStore.get(SESSION_LOGIN_COOKIE)?.value === lastSignInAt) {
+    return;
+  }
+
+  const { error } = await supabase.rpc("record_user_login");
 
   if (error) {
     console.error("Failed to record login:", error.message);
     return;
   }
 
-  setCookie.set(SESSION_LOGIN_COOKIE, "1", {
-    path: "/",
-    maxAge: SESSION_COOKIE_MAX_AGE,
-    sameSite: "lax",
-  });
-
-  setCookie.set(NOTIFICATION_BASELINE_COOKIE, previousLogin ?? "", {
+  setCookie.set(SESSION_LOGIN_COOKIE, lastSignInAt, {
     path: "/",
     maxAge: SESSION_COOKIE_MAX_AGE,
     httpOnly: true,
@@ -65,5 +61,6 @@ export function clearLoginSessionCookies(
   };
 
   clear(SESSION_LOGIN_COOKIE);
-  clear(NOTIFICATION_BASELINE_COOKIE);
+  // Legacy cookie from earlier notification baseline approach.
+  clear("tc_notif_baseline");
 }

@@ -52,8 +52,8 @@ export default async function StudentDashboardPage() {
     >
       <OverviewNotificationBanner
         notifications={notifications}
-        overviewHref="/dashboard"
         messagesHref="/dashboard/messages"
+        commentsHref="/dashboard#tutor-comments"
       />
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-slate-800">Today</h1>
@@ -151,7 +151,7 @@ export default async function StudentDashboardPage() {
             <LessonsLearnedByTag mistakes={bundle.mistakes.slice(0, 8)} />
           </DashboardCard>
 
-          <DashboardCard title="Tutor comments">
+          <DashboardCard id="tutor-comments" title="Tutor comments">
             <TutorCommentList
               comments={studentComments}
               studentId={student.id}

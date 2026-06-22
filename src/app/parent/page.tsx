@@ -50,14 +50,14 @@ export default async function ParentDashboardPage() {
     >
       <OverviewNotificationBanner
         notifications={notifications}
-        overviewHref="/parent"
         messagesHref="/parent/messages"
+        commentsHref="/parent#tutor-comments"
       />
       <h1 className="mb-6 text-2xl font-semibold text-slate-800">
         Student progress
       </h1>
       <div className="space-y-8">
-        {bundles.map((bundle) => {
+        {bundles.map((bundle, index) => {
           const parentComments = bundle.comments.filter(
             (c) => c.visible_to_parent
           );
@@ -103,7 +103,10 @@ export default async function ParentDashboardPage() {
                     replyAs="parent"
                   />
                 </DashboardCard>
-                <DashboardCard title="Tutor comments">
+                <DashboardCard
+                  id={index === 0 ? "tutor-comments" : undefined}
+                  title="Tutor comments"
+                >
                   <TutorCommentList
                     comments={parentComments}
                     studentId={bundle.student.id}

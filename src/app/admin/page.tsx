@@ -28,8 +28,8 @@ export default async function AdminDashboardPage() {
     >
       <OverviewNotificationBanner
         notifications={notifications}
-        overviewHref="/admin"
         messagesHref="/admin/messages"
+        commentsHref="/admin/homework"
       />
       <h1 className="mb-6 text-2xl font-semibold text-slate-800">
         Tutor overview
