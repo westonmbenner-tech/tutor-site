@@ -106,6 +106,7 @@ export default async function AdminStudentDetailPage({
             progress={bundle.progress}
             streakCount={bundle.streakCount}
             calendarLogs={bundle.studyLogs}
+            calendarHomework={bundle.homework}
             calendarFreezes={bundle.freezes}
           />
         </DashboardCard>

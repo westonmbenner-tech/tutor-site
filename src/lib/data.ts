@@ -75,12 +75,21 @@ export async function fetchStudentBundle(studentId: string) {
   ]);
 
   const studyLogs = (logs ?? []) as StudyLog[];
-  const streakFreezes = (freezes ?? []) as StreakFreeze[];
-  const progress = computeWeeklyProgress(studyLogs, streakFreezes);
-  const streakCount = computeWeeklyStreak(studyLogs, streakFreezes);
-  const resolvedHomework = resolveHomeworkStatuses(
-    normalizeHomeworkRows((homework ?? []) as HomeworkAssignment[])
+  const homeworkRows = normalizeHomeworkRows(
+    (homework ?? []) as HomeworkAssignment[]
   );
+  const streakFreezes = (freezes ?? []) as StreakFreeze[];
+  const progress = computeWeeklyProgress(
+    studyLogs,
+    streakFreezes,
+    homeworkRows
+  );
+  const streakCount = computeWeeklyStreak(
+    studyLogs,
+    streakFreezes,
+    homeworkRows
+  );
+  const resolvedHomework = resolveHomeworkStatuses(homeworkRows);
   const stats = aggregateStudyStats(studyLogs);
   const accuracyTrend = buildAccuracyTrend(studyLogs);
   const attentionFlags = detectAttentionFlags(

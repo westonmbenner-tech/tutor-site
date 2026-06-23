@@ -67,6 +67,7 @@ export default async function StudentDashboardPage() {
               progress={bundle.progress}
               streakCount={bundle.streakCount}
               calendarLogs={bundle.studyLogs}
+              calendarHomework={bundle.homework}
               calendarFreezes={bundle.freezes}
               freezesRemaining={student.streak_freeze_balance}
             />
@@ -80,7 +81,7 @@ export default async function StudentDashboardPage() {
 
           <DashboardCard
             title="Today's study log"
-            subtitle="Logging counts toward your weekly streak — not question count."
+            subtitle="Study logs and homework submissions count toward your weekly streak."
           >
             <StudyLogForm
               studentId={student.id}

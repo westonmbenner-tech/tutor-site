@@ -162,7 +162,9 @@ export interface StreakFreeze {
 export interface WeeklyProgress {
   weekStart: string;
   weekEnd: string;
-  studyDays: number;
+  studyLogDays: number;
+  homeworkDays: number;
+  activityDays: number;
   freezeDays: number;
   effectiveDays: number;
   targetDays: number;

@@ -23,33 +23,72 @@ export function formatDateISO(date: Date): string {
   return format(date, "yyyy-MM-dd");
 }
 
+export function homeworkCompletedToActivityDate(
+  completedAt: string | null
+): string | null {
+  if (!completedAt) return null;
+  return completedAt.slice(0, 10);
+}
+
+export function buildActivityDateSet(
+  logs: Pick<StudyLog, "log_date">[],
+  homework: Pick<{ completed_at: string | null }, "completed_at">[] = []
+): Set<string> {
+  const dates = new Set<string>();
+
+  for (const log of logs) {
+    if (log.log_date) dates.add(log.log_date);
+  }
+
+  for (const item of homework) {
+    const activityDate = homeworkCompletedToActivityDate(item.completed_at);
+    if (activityDate) dates.add(activityDate);
+  }
+
+  return dates;
+}
+
 export function computeWeeklyProgress(
   logs: Pick<StudyLog, "log_date">[],
   freezes: Pick<StreakFreeze, "freeze_date">[],
+  homework: Pick<{ completed_at: string | null }, "completed_at">[] = [],
   referenceDate: Date = new Date()
 ): WeeklyProgress {
   const { weekStart, weekEnd } = getWeekBounds(referenceDate);
   const logDates = new Set(logs.map((l) => l.log_date));
+  const homeworkDates = new Set(
+    homework
+      .map((item) => homeworkCompletedToActivityDate(item.completed_at))
+      .filter((date): date is string => Boolean(date))
+  );
   const freezeDates = new Set(freezes.map((f) => f.freeze_date));
 
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
-  let studyDays = 0;
+  let studyLogDays = 0;
+  let homeworkDays = 0;
+  let activityDays = 0;
   let freezeOnlyDays = 0;
 
   for (const day of days) {
     const iso = formatDateISO(day);
     const hasLog = logDates.has(iso);
+    const hasHomework = homeworkDates.has(iso);
     const hasFreeze = freezeDates.has(iso);
-    if (hasLog) studyDays++;
+
+    if (hasLog) studyLogDays++;
+    if (hasHomework) homeworkDays++;
+    if (hasLog || hasHomework) activityDays++;
     else if (hasFreeze) freezeOnlyDays++;
   }
 
-  const effectiveDays = studyDays + freezeOnlyDays;
+  const effectiveDays = activityDays + freezeOnlyDays;
 
   return {
     weekStart: formatDateISO(weekStart),
     weekEnd: formatDateISO(weekEnd),
-    studyDays,
+    studyLogDays,
+    homeworkDays,
+    activityDays,
     freezeDays: freezeOnlyDays,
     effectiveDays,
     targetDays: WEEKLY_TARGET_DAYS,
@@ -60,6 +99,7 @@ export function computeWeeklyProgress(
 export function computeWeeklyStreak(
   allLogs: Pick<StudyLog, "log_date">[],
   allFreezes: Pick<StreakFreeze, "freeze_date">[],
+  allHomework: Pick<{ completed_at: string | null }, "completed_at">[] = [],
   referenceDate: Date = new Date()
 ): number {
   let streak = 0;
@@ -67,10 +107,14 @@ export function computeWeeklyStreak(
 
   while (weekOffset < 104) {
     const weekDate = subWeeks(referenceDate, weekOffset);
-    const progress = computeWeeklyProgress(allLogs, allFreezes, weekDate);
+    const progress = computeWeeklyProgress(
+      allLogs,
+      allFreezes,
+      allHomework,
+      weekDate
+    );
 
     if (weekOffset === 0) {
-      // Current week: only count toward streak if already successful
       if (progress.isSuccessful) {
         streak++;
         weekOffset++;
@@ -93,11 +137,27 @@ export function computeWeeklyStreak(
 export function buildStudyCalendar(
   logs: Pick<StudyLog, "log_date">[],
   freezes: Pick<StreakFreeze, "freeze_date">[],
+  homework: Pick<{ completed_at: string | null }, "completed_at">[] = [],
   daysBack = 14
-): { date: string; hasLog: boolean; hasFreeze: boolean }[] {
+): {
+  date: string;
+  hasStudyLog: boolean;
+  hasHomework: boolean;
+  hasFreeze: boolean;
+}[] {
   const logDates = new Set(logs.map((l) => l.log_date));
+  const homeworkDates = new Set(
+    homework
+      .map((item) => homeworkCompletedToActivityDate(item.completed_at))
+      .filter((date): date is string => Boolean(date))
+  );
   const freezeDates = new Set(freezes.map((f) => f.freeze_date));
-  const result: { date: string; hasLog: boolean; hasFreeze: boolean }[] = [];
+  const result: {
+    date: string;
+    hasStudyLog: boolean;
+    hasHomework: boolean;
+    hasFreeze: boolean;
+  }[] = [];
   const today = new Date();
 
   for (let i = daysBack - 1; i >= 0; i--) {
@@ -106,7 +166,8 @@ export function buildStudyCalendar(
     const iso = formatDateISO(d);
     result.push({
       date: iso,
-      hasLog: logDates.has(iso),
+      hasStudyLog: logDates.has(iso),
+      hasHomework: homeworkDates.has(iso),
       hasFreeze: freezeDates.has(iso),
     });
   }

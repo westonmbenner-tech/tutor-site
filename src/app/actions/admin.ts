@@ -492,8 +492,25 @@ export async function generateParentSummaryAction(
     .select("freeze_date")
     .eq("student_id", studentId);
 
-  const progress = computeWeeklyProgress(allLogs ?? [], freezes ?? []);
-  const streak = computeWeeklyStreak(allLogs ?? [], freezes ?? []);
+  const { data: allHomework } = await supabase
+    .from("homework_assignments")
+    .select("completed_at")
+    .eq("student_id", studentId);
+
+  const streakHomework = (allHomework ?? []).map((item) => ({
+    completed_at: item.completed_at as string | null,
+  }));
+
+  const progress = computeWeeklyProgress(
+    allLogs ?? [],
+    freezes ?? [],
+    streakHomework
+  );
+  const streak = computeWeeklyStreak(
+    allLogs ?? [],
+    freezes ?? [],
+    streakHomework
+  );
   const resolvedHw = resolveHomeworkStatuses(homework ?? []);
 
   const markdown = generateParentSummaryMarkdown({
@@ -508,7 +525,7 @@ export async function generateParentSummaryAction(
       created_at: c.created_at,
       author: (c.profiles as { full_name?: string } | null)?.full_name,
     })),
-    weeklyProgressText: `${progress.effectiveDays} of ${progress.targetDays} study days this week`,
+    weeklyProgressText: `${progress.effectiveDays} of ${progress.targetDays} activity days this week (study logs or homework)`,
     streakCount: streak,
   });
 
