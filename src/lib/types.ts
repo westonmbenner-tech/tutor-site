@@ -62,6 +62,7 @@ export interface HomeworkAssignment {
   student_id: string;
   title: string;
   description: string | null;
+  description_format: "plain" | "latex";
   due_date: string | null;
   status: HomeworkStatus;
   links: { url: string; label?: string }[];

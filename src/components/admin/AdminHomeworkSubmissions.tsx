@@ -4,6 +4,7 @@ import { HomeworkAutoGraderPanel } from "@/components/admin/HomeworkAutoGraderPa
 import { HomeworkAssignmentAdminActions } from "@/components/admin/HomeworkAssignmentAdminActions";
 import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 import { FormattedMultilineText } from "@/components/FormattedMultilineText";
+import { HomeworkDescription } from "@/components/HomeworkDescription";
 import type { HomeworkAssignment, TutorComment } from "@/lib/types";
 
 type ResolvedHomework = HomeworkAssignment & {
@@ -49,7 +50,11 @@ export function HomeworkAssignmentDetail({
           </p>
         )}
         {item.description && (
-          <p className="mt-3 text-sm text-slate-700">{item.description}</p>
+          <HomeworkDescription
+            text={item.description}
+            format={item.description_format ?? "plain"}
+            className="mt-3 text-sm text-slate-700"
+          />
         )}
         {Array.isArray(item.links) && item.links.length > 0 && (
           <ul className="mt-3 space-y-1">

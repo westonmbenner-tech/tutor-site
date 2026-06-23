@@ -75,7 +75,11 @@ export function withHomeworkAiGradings<
 }
 
 export function normalizeHomeworkRows(
-  rows: (HomeworkAssignment & { ai_gradings?: unknown })[]
+  rows: (HomeworkAssignment & { ai_gradings?: unknown; description_format?: unknown })[]
 ): HomeworkAssignment[] {
-  return rows.map((row) => withHomeworkAiGradings(row));
+  return rows.map((row) => ({
+    ...withHomeworkAiGradings(row),
+    description_format:
+      row.description_format === "latex" ? "latex" : ("plain" as const),
+  }));
 }

@@ -1,3 +1,4 @@
+import { FormattedMultilineText } from "@/components/FormattedMultilineText";
 import type { Mistake } from "@/lib/types";
 import {
   UNCategorized_LABEL_FILTER,
@@ -89,7 +90,10 @@ export function LessonsLearnedByTag({
             <ul className="mt-3 space-y-2">
               {group.items.map((item, index) => (
                 <li key={`${group.labelFilterId}-${index}`} className="text-sm">
-                  <p className="text-[var(--color-primary)]">{item.lesson}</p>
+                  <FormattedMultilineText
+                    text={item.lesson}
+                    className="text-[var(--color-primary)]"
+                  />
                   <p className="mt-1 text-xs text-[var(--color-muted)]">
                     {item.date}
                     {item.topic ? ` · ${item.topic}` : ""}

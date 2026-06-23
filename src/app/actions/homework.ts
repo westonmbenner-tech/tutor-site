@@ -35,6 +35,7 @@ export async function createHomework(
     student_id: formData.get("student_id"),
     title: formData.get("title"),
     description: formData.get("description") || undefined,
+    description_format: formData.get("description_format") || "plain",
     due_date: formData.get("due_date") || null,
     links: formData.get("links") || undefined,
     attachments: formData.get("attachments") || undefined,
@@ -54,6 +55,7 @@ export async function createHomework(
       student_id: parsed.data.student_id,
       title: parsed.data.title,
       description: parsed.data.description || null,
+      description_format: parsed.data.description_format ?? "plain",
       due_date: parsed.data.due_date || null,
       links: parseJsonField(parsed.data.links),
       attachments: parseJsonField(parsed.data.attachments),
@@ -107,6 +109,7 @@ export async function updateHomework(
   const parsed = homeworkUpdateSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description") || undefined,
+    description_format: formData.get("description_format") || "plain",
     due_date: formData.get("due_date") || null,
     links: formData.get("links") || undefined,
     attachments: formData.get("attachments") || undefined,
@@ -136,6 +139,7 @@ export async function updateHomework(
     .update({
       title: parsed.data.title,
       description: parsed.data.description || null,
+      description_format: parsed.data.description_format ?? "plain",
       due_date: parsed.data.due_date || null,
       links: parseJsonField(parsed.data.links),
       attachments: parseJsonField(parsed.data.attachments),

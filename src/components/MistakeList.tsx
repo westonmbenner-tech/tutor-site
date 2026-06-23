@@ -1,6 +1,7 @@
 "use client";
 
 import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { FormattedMultilineText } from "@/components/FormattedMultilineText";
 import type { Mistake } from "@/lib/types";
 import { getMistakeLabelName } from "@/lib/mistakes-utils";
 
@@ -55,15 +56,25 @@ export function MistakeList({
                   )}
                 </div>
                 {m.question_prompt && (
-                  <p className="font-medium text-slate-800">{m.question_prompt}</p>
+                  <FormattedMultilineText
+                    text={m.question_prompt}
+                    className="font-medium text-slate-800"
+                  />
                 )}
                 {m.explanation && (
-                  <p className="text-slate-600">{m.explanation}</p>
+                  <FormattedMultilineText
+                    text={m.explanation}
+                    className="text-slate-600"
+                  />
                 )}
                 {m.lesson_learned && (
-                  <p className="text-[var(--color-primary)]">
-                    Lesson: {m.lesson_learned}
-                  </p>
+                  <div>
+                    <p className="font-medium text-[var(--color-primary)]">Lesson:</p>
+                    <FormattedMultilineText
+                      text={m.lesson_learned}
+                      className="text-[var(--color-primary)]"
+                    />
+                  </div>
                 )}
               </div>
             </CollapsibleSection>

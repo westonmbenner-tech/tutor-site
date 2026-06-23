@@ -78,13 +78,25 @@ function GradingResultCard({ grading }: { grading: HomeworkAiGrading }) {
                     {question.correct ? "Correct" : "Incorrect"}
                   </span>
                 </div>
-                <p className="mt-2 text-slate-700">{question.question_text}</p>
+                <FormattedMultilineText
+                  text={question.question_text}
+                  className="mt-2 text-slate-700"
+                />
                 {question.student_answer && (
-                  <p className="mt-2 text-[var(--color-muted)]">
-                    Student answer: {question.student_answer}
-                  </p>
+                  <div className="mt-2">
+                    <p className="font-medium text-[var(--color-muted)]">
+                      Student answer:
+                    </p>
+                    <FormattedMultilineText
+                      text={question.student_answer}
+                      className="text-[var(--color-muted)]"
+                    />
+                  </div>
                 )}
-                <p className="mt-2 text-slate-700">{question.feedback}</p>
+                <FormattedMultilineText
+                  text={question.feedback}
+                  className="mt-2 text-slate-700"
+                />
               </li>
             ))}
           </ul>

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { FormattedMultilineText } from "@/components/FormattedMultilineText";
 import type { StudyLog } from "@/lib/types";
 
 export function StudyLogAdminEntry({
@@ -33,9 +34,10 @@ export function StudyLogAdminEntry({
               <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted)]">
                 {section.label}
               </p>
-              <p className="mt-1 whitespace-pre-wrap text-slate-700">
-                {section.value}
-              </p>
+              <FormattedMultilineText
+                text={section.value ?? ""}
+                className="mt-1 text-slate-700"
+              />
             </div>
           ))}
         </div>

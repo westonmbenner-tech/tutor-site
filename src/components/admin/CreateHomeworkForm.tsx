@@ -2,12 +2,17 @@
 
 import { useActionState, useState } from "react";
 import { createHomework } from "@/app/actions/homework";
+import { HomeworkDescriptionPreview } from "@/components/HomeworkDescription";
+import type { HomeworkDescriptionFormat } from "@/lib/parse-homework-latex";
 import type { Student } from "@/lib/types";
 
 const initialState = { error: null as string | null, success: false };
 
 export function CreateHomeworkForm({ students }: { students: Student[] }) {
   const [state, formAction, pending] = useActionState(createHomework, initialState);
+  const [description, setDescription] = useState("");
+  const [descriptionFormat, setDescriptionFormat] =
+    useState<HomeworkDescriptionFormat>("plain");
 
   return (
     <form action={formAction} className="space-y-4">
@@ -36,8 +41,20 @@ export function CreateHomeworkForm({ students }: { students: Student[] }) {
         <label className="label" htmlFor="description">
           Description
         </label>
-        <textarea id="description" name="description" rows={3} />
+        <textarea
+          id="description"
+          name="description"
+          rows={5}
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="Use $...$ or $$...$$ for math when displaying as LaTeX."
+        />
       </div>
+      <HomeworkDescriptionPreview
+        description={description}
+        selectedFormat={descriptionFormat}
+        onFormatChange={setDescriptionFormat}
+      />
       <div className="form-group">
         <label className="label" htmlFor="due_date">
           Due date

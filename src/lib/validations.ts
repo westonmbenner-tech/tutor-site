@@ -40,10 +40,13 @@ export const mistakeLabelSchema = z.object({
     .max(100, "Category name is too long"),
 });
 
+export const homeworkDescriptionFormatSchema = z.enum(["plain", "latex"]);
+
 export const homeworkSchema = z.object({
   student_id: z.string().uuid(),
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
+  description_format: homeworkDescriptionFormatSchema.optional(),
   due_date: z.string().optional().nullable(),
   links: z.string().optional(),
   attachments: z.string().optional(),
@@ -87,6 +90,7 @@ export const homeworkSubmissionSchema = z.object({
 export const homeworkUpdateSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
+  description_format: homeworkDescriptionFormatSchema.optional(),
   due_date: z.string().optional().nullable(),
   links: z.string().optional(),
   attachments: z.string().optional(),

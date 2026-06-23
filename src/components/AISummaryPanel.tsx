@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FormattedMultilineText } from "@/components/FormattedMultilineText";
 import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 import type { AIMistakeSummary } from "@/lib/types";
 
@@ -104,7 +105,10 @@ export function AISummaryPanel({
                 <DisplayDateTime iso={s.created_at} variant="datetime" />
               </p>
               {s.summary && (
-                <p className="mt-3 text-sm text-slate-700">{s.summary}</p>
+                <FormattedMultilineText
+                  text={s.summary}
+                  className="mt-3 text-sm text-slate-700"
+                />
               )}
               {s.weak_areas?.length > 0 && (
                 <div className="mt-4">
@@ -133,16 +137,20 @@ export function AISummaryPanel({
                         <p className="font-medium text-slate-800">
                           {g.category} ({g.mistake_count})
                         </p>
-                        <p className="mt-1">{g.suggestion}</p>
+                        <FormattedMultilineText
+                          text={g.suggestion}
+                          className="mt-1"
+                        />
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
               {s.suggested_next_steps && (
-                <p className="mt-4 text-sm text-[var(--color-primary)]">
-                  Next steps: {s.suggested_next_steps}
-                </p>
+                <div className="mt-4 text-sm text-[var(--color-primary)]">
+                  <p className="font-medium">Next steps:</p>
+                  <FormattedMultilineText text={s.suggested_next_steps} />
+                </div>
               )}
             </article>
           ))}

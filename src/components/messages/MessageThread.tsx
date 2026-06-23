@@ -1,4 +1,5 @@
 import { MessageComposer } from "@/components/messages/MessageComposer";
+import { FormattedMultilineText } from "@/components/FormattedMultilineText";
 import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 import { authorRoleLabel } from "@/lib/messages";
 import type { Message } from "@/lib/types";
@@ -56,7 +57,7 @@ export function MessageThread({
                   >
                     {isSelf ? "You" : authorName} · {roleLabel}
                   </p>
-                  <p className="whitespace-pre-wrap">{message.body}</p>
+                  <FormattedMultilineText text={message.body} />
                   <p
                     className={`mt-2 text-xs ${
                       isSelf ? "text-white/70" : "text-[var(--color-muted)]"

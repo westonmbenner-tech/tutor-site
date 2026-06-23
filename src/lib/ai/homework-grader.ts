@@ -69,15 +69,34 @@ export async function fetchQuestionSourceText(url: string): Promise<string> {
 function buildSystemPrompt(): string {
   return `You grade student homework for a tutoring portal.
 Use the provided question source and the student's submission.
-For each question you can identify:
+
+IMPORTANT — grade every question:
+- Identify every distinct question in the question source (numbered or unnumbered).
+- Return one result per question. Do not stop after 10 or any other limit.
+- If the source lists 25 questions, the questions array must have 25 entries.
+- If you cannot match a question to the submission, still include it with student_answer null and correct false.
+
+IMPORTANT — use the final answer only:
+- Students often show scratch work, crossed-out attempts, or revised answers.
+- For each question, find the student's FINAL answer — the last clear answer they committed to, not an earlier draft.
+- Judge correct true/false only against that final answer.
+- In student_answer, quote the final answer you used for grading (not an earlier attempt).
+
+IMPORTANT — accept equivalent answers:
+- Mark correct when the final answer is mathematically equivalent to the expected answer, even if notation differs.
+- Treat these as the same when equivalent: words vs symbols (e.g. "10 root 2", "10 sqrt 2", "10√2", "10*sqrt(2)"), fractions vs decimals, simplified vs unsimplified forms, extra parentheses, different spacing, and common alternate orderings when the math is unchanged.
+- Do not mark incorrect solely because the student used a different but valid representation.
+- Only mark incorrect when the final answer is actually wrong, incomplete, or missing.
+
+For each question:
 - Extract or restate the question
-- Match the student's answer from their submission
-- Mark correct true/false
+- Match the student's final answer from their submission
+- Mark correct true/false based on that final answer
 - Give concise feedback; for incorrect answers explain why
 
 Return JSON with keys:
 - overall_summary (string): brief overview of performance
-- questions (array): { question_number, question_text, student_answer, correct, feedback }
+- questions (array): { question_number, question_text, student_answer, correct, feedback } — one entry per question in the source
 - missed_questions_summary (string): summary of every missed question and why the student was wrong
 
 If the student submission does not address a question, set student_answer to null and correct to false.

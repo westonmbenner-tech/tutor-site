@@ -2,6 +2,7 @@
 
 import type { HomeworkAssignment, TutorComment } from "@/lib/types";
 import { FormattedMultilineText } from "@/components/FormattedMultilineText";
+import { HomeworkDescription } from "@/components/HomeworkDescription";
 import { HomeworkCompleteForm } from "@/components/HomeworkCompleteForm";
 import { HomeworkSubmissionActions } from "@/components/HomeworkSubmissionActions";
 import { TutorCommentList } from "@/components/TutorCommentBox";
@@ -76,9 +77,11 @@ export function HomeworkList({
               </div>
 
               {item.description && (
-                <p className="text-sm leading-relaxed text-[var(--color-muted)]">
-                  {item.description}
-                </p>
+                <HomeworkDescription
+                  text={item.description}
+                  format={item.description_format ?? "plain"}
+                  className="text-sm text-[var(--color-muted)]"
+                />
               )}
 
               {item.due_date && (

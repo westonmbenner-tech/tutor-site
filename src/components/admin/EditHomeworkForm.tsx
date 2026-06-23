@@ -1,8 +1,10 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateHomework } from "@/app/actions/homework";
+import { HomeworkDescriptionPreview } from "@/components/HomeworkDescription";
+import type { HomeworkDescriptionFormat } from "@/lib/parse-homework-latex";
 import type { HomeworkAssignment } from "@/lib/types";
 
 const initialState = { error: null as string | null, success: false };
@@ -15,6 +17,14 @@ export function EditHomeworkForm({ item }: { item: ResolvedHomework }) {
   const router = useRouter();
   const boundAction = updateHomework.bind(null, item.id);
   const [state, formAction, pending] = useActionState(boundAction, initialState);
+  const [description, setDescription] = useState(item.description ?? "");
+  const [descriptionFormat, setDescriptionFormat] =
+    useState<HomeworkDescriptionFormat>(item.description_format ?? "plain");
+
+  useEffect(() => {
+    setDescription(item.description ?? "");
+    setDescriptionFormat(item.description_format ?? "plain");
+  }, [item.id, item.description, item.description_format]);
 
   useEffect(() => {
     if (state.success) {
@@ -42,10 +52,17 @@ export function EditHomeworkForm({ item }: { item: ResolvedHomework }) {
         <textarea
           id={`description-${item.id}`}
           name="description"
-          rows={3}
-          defaultValue={item.description ?? ""}
+          rows={5}
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="Use $...$ or $$...$$ for math when displaying as LaTeX."
         />
       </div>
+      <HomeworkDescriptionPreview
+        description={description}
+        selectedFormat={descriptionFormat}
+        onFormatChange={setDescriptionFormat}
+      />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="form-group mb-0">
           <label className="label" htmlFor={`due_date-${item.id}`}>
