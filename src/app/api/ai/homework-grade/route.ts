@@ -9,7 +9,7 @@ import type { HomeworkAiGrading } from "@/lib/types";
 
 const MAX_IMAGES = 5;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-const MAX_QUESTION_TEXT_CHARS = 20000;
+const MAX_QUESTION_TEXT_CHARS = 50000;
 const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
