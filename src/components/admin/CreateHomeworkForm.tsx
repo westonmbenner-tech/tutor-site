@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { createHomework } from "@/app/actions/homework";
 import { HomeworkDescriptionPreview } from "@/components/HomeworkDescription";
+import { MasterySourceFields } from "@/components/admin/MasterySourceFields";
 import type { HomeworkDescriptionFormat } from "@/lib/parse-homework-latex";
 import type { Student } from "@/lib/types";
 
@@ -55,6 +56,7 @@ export function CreateHomeworkForm({ students }: { students: Student[] }) {
         selectedFormat={descriptionFormat}
         onFormatChange={setDescriptionFormat}
       />
+      <MasterySourceFields idPrefix="create-" />
       <div className="form-group">
         <label className="label" htmlFor="due_date">
           Due date

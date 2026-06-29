@@ -8,6 +8,7 @@ import {
   notifyStudentHomeworkAssigned,
   notifyStudentHomeworkTutorComment,
 } from "@/lib/email/student-notifications";
+import { masterySessionPassed } from "@/lib/homework-mastery";
 import { getStudentRecipient } from "@/lib/email/student-recipients";
 import { revalidatePath } from "next/cache";
 import { getProfile, requireAdmin, canAccessStudent, getStudentForProfile, requireStudent } from "@/lib/auth";
@@ -22,6 +23,28 @@ function parseJsonField(value: string | undefined, fallback: unknown[] = []) {
   } catch {
     return fallback;
   }
+}
+
+function parseMasteryFieldsFromForm(formData: FormData) {
+  const mandate_ai_mastery = formData.get("mandate_ai_mastery") === "on";
+  const rawType = formData.get("mastery_source_type");
+  const mastery_source_type =
+    mandate_ai_mastery && (rawType === "text" || rawType === "url")
+      ? rawType
+      : null;
+
+  return {
+    mandate_ai_mastery,
+    mastery_source_type,
+    mastery_source_text:
+      mandate_ai_mastery && mastery_source_type === "text"
+        ? String(formData.get("mastery_source_text") ?? "").trim() || null
+        : null,
+    mastery_source_url:
+      mandate_ai_mastery && mastery_source_type === "url"
+        ? String(formData.get("mastery_source_url") ?? "").trim() || null
+        : null,
+  };
 }
 
 export async function createHomework(
@@ -39,6 +62,7 @@ export async function createHomework(
     due_date: formData.get("due_date") || null,
     links: formData.get("links") || undefined,
     attachments: formData.get("attachments") || undefined,
+    ...parseMasteryFieldsFromForm(formData),
   });
 
   if (!parsed.success) {
@@ -61,6 +85,10 @@ export async function createHomework(
       attachments: parseJsonField(parsed.data.attachments),
       created_by: profile?.id,
       status: "assigned",
+      mandate_ai_mastery: parsed.data.mandate_ai_mastery ?? false,
+      mastery_source_type: parsed.data.mastery_source_type ?? null,
+      mastery_source_text: parsed.data.mastery_source_text ?? null,
+      mastery_source_url: parsed.data.mastery_source_url ?? null,
     })
     .select("id, title, description, due_date")
     .single();
@@ -97,6 +125,7 @@ function revalidateHomeworkPaths(homeworkId?: string, studentId?: string) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/homework");
   revalidatePath("/parent");
+  revalidatePath("/parent/homework");
 }
 
 export async function updateHomework(
@@ -114,6 +143,7 @@ export async function updateHomework(
     links: formData.get("links") || undefined,
     attachments: formData.get("attachments") || undefined,
     status: formData.get("status") || undefined,
+    ...parseMasteryFieldsFromForm(formData),
   });
 
   if (!parsed.success) {
@@ -144,6 +174,10 @@ export async function updateHomework(
       links: parseJsonField(parsed.data.links),
       attachments: parseJsonField(parsed.data.attachments),
       status: parsed.data.status ?? "assigned",
+      mandate_ai_mastery: parsed.data.mandate_ai_mastery ?? false,
+      mastery_source_type: parsed.data.mastery_source_type ?? null,
+      mastery_source_text: parsed.data.mastery_source_text ?? null,
+      mastery_source_url: parsed.data.mastery_source_url ?? null,
     })
     .eq("id", homeworkId);
 
@@ -305,12 +339,23 @@ export async function completeHomework(
   const supabase = await createClient();
   const { data: hw } = await supabase
     .from("homework_assignments")
-    .select("student_id, title, due_date, students(display_name)")
+    .select(
+      "student_id, title, due_date, mandate_ai_mastery, mastery_session, students(display_name)"
+    )
     .eq("id", homeworkId)
     .single();
 
   if (!hw || !(await canAccessStudent(profile, hw.student_id))) {
     return { error: "Unauthorized", success: false };
+  }
+
+  if (profile.role === "student" && hw.mandate_ai_mastery) {
+    if (!masterySessionPassed(hw.mastery_session)) {
+      return {
+        error: "Complete the AI mastery check before submitting homework.",
+        success: false,
+      };
+    }
   }
 
   const { error } = await supabase
@@ -456,10 +501,12 @@ export async function createHomeworkComment(
   const supabase = await createClient();
 
   if (!(await homeworkIsSubmitted(supabase, homeworkAssignmentId, studentId))) {
-    return {
-      error: "Comments are available after homework is submitted.",
-      success: false,
-    };
+    if (profile.role !== "parent") {
+      return {
+        error: "Comments are available after homework is submitted.",
+        success: false,
+      };
+    }
   }
 
   const visible_to_student = true;
@@ -504,6 +551,8 @@ function revalidateCommentPaths(
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/homework");
   revalidatePath("/parent");
+  revalidatePath("/parent/homework");
+  revalidatePath("/parent/ai-summary");
 }
 
 async function getCommentThreadRoot(

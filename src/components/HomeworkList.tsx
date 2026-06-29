@@ -7,6 +7,7 @@ import { HomeworkCompleteForm } from "@/components/HomeworkCompleteForm";
 import { HomeworkSubmissionActions } from "@/components/HomeworkSubmissionActions";
 import { TutorCommentList } from "@/components/TutorCommentBox";
 import type { CommentReplyRole } from "@/components/CommentReplyForm";
+import { HomeworkAiGradingHistory } from "@/components/HomeworkAiGradingHistory";
 import { filterHomeworkComments } from "@/lib/comments";
 
 type ResolvedHomework = HomeworkAssignment & {
@@ -27,6 +28,7 @@ export function HomeworkList({
   studentId,
   currentUserId,
   replyAs,
+  showAiGradings = false,
 }: {
   items: ResolvedHomework[];
   showCompleteButton?: boolean;
@@ -34,6 +36,7 @@ export function HomeworkList({
   studentId?: string;
   currentUserId?: string;
   replyAs?: CommentReplyRole;
+  showAiGradings?: boolean;
 }) {
   if (items.length === 0) {
     return (
@@ -46,11 +49,11 @@ export function HomeworkList({
       {items.map((item) => {
         const hasSubmission =
           Boolean(item.submission_text) || item.resolved_status === "completed";
-        const showComments =
-          hasSubmission &&
-          Boolean(studentId && currentUserId && replyAs && replyAs !== "admin");
+        const canDiscuss =
+          Boolean(studentId && currentUserId && replyAs && replyAs !== "admin") &&
+          (replyAs === "parent" || hasSubmission);
         const homeworkComments =
-          showComments && studentId && currentUserId && replyAs
+          canDiscuss && studentId && currentUserId && replyAs
             ? filterHomeworkComments(
                 comments,
                 item.id,
@@ -74,6 +77,11 @@ export function HomeworkList({
                 >
                   {item.resolved_status}
                 </span>
+                {item.mandate_ai_mastery && item.resolved_status !== "completed" && (
+                  <span className="rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-medium text-violet-700">
+                    AI mastery required
+                  </span>
+                )}
               </div>
 
               {item.description && (
@@ -130,7 +138,11 @@ export function HomeworkList({
               </div>
             )}
 
-            {showComments && studentId && currentUserId && replyAs && (
+            {showAiGradings && hasSubmission && (item.ai_gradings?.length ?? 0) > 0 && (
+              <HomeworkAiGradingHistory gradings={item.ai_gradings} />
+            )}
+
+            {canDiscuss && studentId && currentUserId && replyAs && (
               <div className="mt-5 border-t border-[var(--color-border)] pt-4">
                 <p className="mb-3 text-sm font-medium text-slate-800">Comments</p>
                 <TutorCommentList

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateHomework } from "@/app/actions/homework";
 import { HomeworkDescriptionPreview } from "@/components/HomeworkDescription";
+import { MasterySourceFields } from "@/components/admin/MasterySourceFields";
 import type { HomeworkDescriptionFormat } from "@/lib/parse-homework-latex";
 import type { HomeworkAssignment } from "@/lib/types";
 
@@ -62,6 +63,13 @@ export function EditHomeworkForm({ item }: { item: ResolvedHomework }) {
         description={description}
         selectedFormat={descriptionFormat}
         onFormatChange={setDescriptionFormat}
+      />
+      <MasterySourceFields
+        idPrefix={`edit-${item.id}-`}
+        defaultMandate={item.mandate_ai_mastery ?? false}
+        defaultSourceType={item.mastery_source_type ?? "text"}
+        defaultSourceText={item.mastery_source_text ?? ""}
+        defaultSourceUrl={item.mastery_source_url ?? ""}
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="form-group mb-0">

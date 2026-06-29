@@ -57,6 +57,30 @@ export interface HomeworkAiGrading {
   missed_questions_summary: string;
 }
 
+export interface HomeworkMasteryQuestion {
+  question_number: number;
+  question_text: string;
+  question_type: "conceptual" | "calculation";
+}
+
+export interface HomeworkMasteryAnswer {
+  question_number: number;
+  student_answer: string;
+  correct: boolean;
+  feedback: string;
+}
+
+export interface HomeworkMasterySession {
+  status: "not_started" | "in_progress" | "completed";
+  questions: HomeworkMasteryQuestion[];
+  answers: HomeworkMasteryAnswer[];
+  score_percent: number | null;
+  passed: boolean;
+  pass_threshold: number;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
 export interface HomeworkAssignment {
   id: string;
   student_id: string;
@@ -72,6 +96,11 @@ export interface HomeworkAssignment {
   completed_at: string | null;
   submission_text: string | null;
   ai_gradings: HomeworkAiGrading[];
+  mandate_ai_mastery: boolean;
+  mastery_source_type: "text" | "url" | null;
+  mastery_source_text: string | null;
+  mastery_source_url: string | null;
+  mastery_session: HomeworkMasterySession | null;
 }
 
 export interface StudyLog {

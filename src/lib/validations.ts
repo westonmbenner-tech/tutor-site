@@ -42,15 +42,67 @@ export const mistakeLabelSchema = z.object({
 
 export const homeworkDescriptionFormatSchema = z.enum(["plain", "latex"]);
 
-export const homeworkSchema = z.object({
-  student_id: z.string().uuid(),
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  description_format: homeworkDescriptionFormatSchema.optional(),
-  due_date: z.string().optional().nullable(),
-  links: z.string().optional(),
-  attachments: z.string().optional(),
-});
+export const masterySourceTypeSchema = z.enum(["text", "url"]);
+
+const masteryFields = {
+  mandate_ai_mastery: z.boolean().optional(),
+  mastery_source_type: masterySourceTypeSchema.optional().nullable(),
+  mastery_source_text: z.string().optional().nullable(),
+  mastery_source_url: z.string().optional().nullable(),
+};
+
+function validateMasteryConfig(
+  data: {
+    mandate_ai_mastery?: boolean;
+    mastery_source_type?: "text" | "url" | null;
+    mastery_source_text?: string | null;
+    mastery_source_url?: string | null;
+  },
+  ctx: z.RefinementCtx
+) {
+  if (!data.mandate_ai_mastery) return;
+
+  if (data.mastery_source_type === "text") {
+    if (!data.mastery_source_text?.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Paste study material text when mandating the AI chatbot.",
+        path: ["mastery_source_text"],
+      });
+    }
+    return;
+  }
+
+  if (data.mastery_source_type === "url") {
+    if (!data.mastery_source_url?.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Provide a study material URL when mandating the AI chatbot.",
+        path: ["mastery_source_url"],
+      });
+    }
+    return;
+  }
+
+  ctx.addIssue({
+    code: "custom",
+    message: "Choose text or URL study material when mandating the AI chatbot.",
+    path: ["mastery_source_type"],
+  });
+}
+
+export const homeworkSchema = z
+  .object({
+    student_id: z.string().uuid(),
+    title: z.string().min(1, "Title is required"),
+    description: z.string().optional(),
+    description_format: homeworkDescriptionFormatSchema.optional(),
+    due_date: z.string().optional().nullable(),
+    links: z.string().optional(),
+    attachments: z.string().optional(),
+    ...masteryFields,
+  })
+  .superRefine(validateMasteryConfig);
 
 export const commentSchema = z.object({
   student_id: z.string().uuid(),
@@ -87,15 +139,18 @@ export const homeworkSubmissionSchema = z.object({
     .transform((value) => value.replace(/\r\n/g, "\n").trim()),
 });
 
-export const homeworkUpdateSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  description_format: homeworkDescriptionFormatSchema.optional(),
-  due_date: z.string().optional().nullable(),
-  links: z.string().optional(),
-  attachments: z.string().optional(),
-  status: z.enum(["assigned", "completed", "late", "missing"]).optional(),
-});
+export const homeworkUpdateSchema = z
+  .object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().optional(),
+    description_format: homeworkDescriptionFormatSchema.optional(),
+    due_date: z.string().optional().nullable(),
+    links: z.string().optional(),
+    attachments: z.string().optional(),
+    status: z.enum(["assigned", "completed", "late", "missing"]).optional(),
+    ...masteryFields,
+  })
+  .superRefine(validateMasteryConfig);
 
 export const streakFreezeSchema = z.object({
   student_id: z.string().uuid(),

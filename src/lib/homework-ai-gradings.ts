@@ -3,6 +3,7 @@ import type {
   HomeworkAiQuestionResult,
   HomeworkAssignment,
 } from "@/lib/types";
+import { parseHomeworkMasterySession } from "@/lib/homework-mastery";
 
 function parseQuestion(raw: unknown): HomeworkAiQuestionResult | null {
   if (!raw || typeof raw !== "object") return null;
@@ -81,5 +82,15 @@ export function normalizeHomeworkRows(
     ...withHomeworkAiGradings(row),
     description_format:
       row.description_format === "latex" ? "latex" : ("plain" as const),
+    mandate_ai_mastery: row.mandate_ai_mastery === true,
+    mastery_source_type:
+      row.mastery_source_type === "text" || row.mastery_source_type === "url"
+        ? row.mastery_source_type
+        : null,
+    mastery_source_text:
+      typeof row.mastery_source_text === "string" ? row.mastery_source_text : null,
+    mastery_source_url:
+      typeof row.mastery_source_url === "string" ? row.mastery_source_url : null,
+    mastery_session: parseHomeworkMasterySession(row.mastery_session),
   }));
 }

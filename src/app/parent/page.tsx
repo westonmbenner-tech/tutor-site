@@ -102,6 +102,7 @@ export default async function ParentDashboardPage() {
                     studentId={bundle.student.id}
                     currentUserId={profile.id}
                     replyAs="parent"
+                    showAiGradings
                   />
                 </DashboardCard>
                 <DashboardCard

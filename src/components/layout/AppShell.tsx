@@ -26,6 +26,8 @@ const navByRole: Record<UserRole, NavLink[]> = {
   ],
   parent: [
     { href: "/parent", label: "Overview" },
+    { href: "/parent/homework", label: "Homework" },
+    { href: "/parent/ai-summary", label: "AI Insights" },
     { href: "/parent/messages", label: "Messages" },
   ],
 };
