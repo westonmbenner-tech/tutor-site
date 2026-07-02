@@ -159,7 +159,7 @@ export default async function AdminStudentDetailPage({
           )}
         </DashboardCard>
 
-        <DashboardCard title="Homework submissions">
+        <DashboardCard title="Homework & comments">
           <AdminHomeworkSubmissions
             items={bundle.homework}
             comments={bundle.comments}

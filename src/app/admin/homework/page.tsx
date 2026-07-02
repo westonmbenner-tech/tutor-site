@@ -6,17 +6,22 @@ import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeHomeworkRows } from "@/lib/homework-ai-gradings";
 import { resolveHomeworkStatuses } from "@/lib/streak";
-import type { HomeworkAssignment, Student } from "@/lib/types";
+import type { HomeworkAssignment, Student, TutorComment } from "@/lib/types";
 
 export default async function AdminHomeworkPage() {
   const profile = await requireAdmin();
   const supabase = await createClient();
 
-  const [{ data: students }, { data: homework }] = await Promise.all([
+  const [{ data: students }, { data: homework }, { data: comments }] = await Promise.all([
     supabase.from("students").select("*").eq("active", true).order("display_name"),
     supabase
       .from("homework_assignments")
       .select("*, students(display_name)")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("tutor_comments")
+      .select("*, profiles(full_name, role)")
+      .not("homework_assignment_id", "is", null)
       .order("created_at", { ascending: false }),
   ]);
 
@@ -40,7 +45,10 @@ export default async function AdminHomeworkPage() {
           title="All assignments"
           subtitle="Click a title to review the submission and leave feedback."
         >
-          <AdminHomeworkList items={resolved} />
+          <AdminHomeworkList
+            items={resolved}
+            comments={(comments ?? []) as TutorComment[]}
+          />
         </DashboardCard>
       </div>
     </RoleAppShell>

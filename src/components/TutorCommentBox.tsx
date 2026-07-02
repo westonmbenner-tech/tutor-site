@@ -12,6 +12,7 @@ import {
   canReplyToComment,
   commentAuthorLabel,
   commentRoleLabel,
+  isParentComment,
 } from "@/lib/comments";
 import type { TutorComment } from "@/lib/types";
 
@@ -94,9 +95,11 @@ function CommentItem({
 }) {
   return (
     <div
-      className={`rounded-lg border border-[var(--color-border)] bg-white p-3 ${
-        indent ? "ml-4 border-l-2 border-l-[var(--color-primary-light)]" : ""
-      }`}
+      className={`rounded-lg border bg-white p-3 ${
+        isParentComment(comment)
+          ? "border-violet-200 bg-violet-50/40"
+          : "border-[var(--color-border)]"
+      } ${indent ? "ml-4 border-l-2 border-l-[var(--color-primary-light)]" : ""}`}
     >
       <FormattedMultilineText
         text={comment.comment}

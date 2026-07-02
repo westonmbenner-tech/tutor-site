@@ -99,3 +99,34 @@ export function filterHomeworkComments(
           : comment.visible_to_parent))
   );
 }
+
+export function getHomeworkComments(
+  comments: TutorComment[],
+  homeworkAssignmentId: string
+): TutorComment[] {
+  return comments.filter(
+    (comment) => comment.homework_assignment_id === homeworkAssignmentId
+  );
+}
+
+export function isParentComment(comment: TutorComment): boolean {
+  return comment.profiles?.role === "parent";
+}
+
+export function countParentHomeworkComments(
+  comments: TutorComment[],
+  homeworkAssignmentId: string
+): number {
+  return getHomeworkComments(comments, homeworkAssignmentId).filter(isParentComment)
+    .length;
+}
+
+export function homeworkHasReviewActivity(
+  item: { submission_text: string | null; resolved_status: string },
+  comments: TutorComment[],
+  homeworkAssignmentId: string
+): boolean {
+  const hasSubmission =
+    Boolean(item.submission_text) || item.resolved_status === "completed";
+  return hasSubmission || getHomeworkComments(comments, homeworkAssignmentId).length > 0;
+}

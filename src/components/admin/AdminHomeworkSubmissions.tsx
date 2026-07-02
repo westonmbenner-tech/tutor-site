@@ -5,6 +5,11 @@ import { HomeworkAssignmentAdminActions } from "@/components/admin/HomeworkAssig
 import { DisplayDateTime } from "@/components/timezone/DisplayDateTime";
 import { FormattedMultilineText } from "@/components/FormattedMultilineText";
 import { HomeworkDescription } from "@/components/HomeworkDescription";
+import {
+  countParentHomeworkComments,
+  getHomeworkComments,
+  homeworkHasReviewActivity,
+} from "@/lib/comments";
 import type { HomeworkAssignment, TutorComment } from "@/lib/types";
 
 type ResolvedHomework = HomeworkAssignment & {
@@ -31,6 +36,8 @@ export function HomeworkAssignmentDetail({
 }) {
   const hasSubmission =
     Boolean(item.submission_text) || item.resolved_status === "completed";
+  const homeworkComments = getHomeworkComments(comments, item.id);
+  const parentCommentCount = countParentHomeworkComments(comments, item.id);
 
   return (
     <div className="space-y-6">
@@ -108,15 +115,28 @@ export function HomeworkAssignmentDetail({
       )}
 
       <section className="rounded-xl border border-[var(--color-border)] bg-white p-5">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-[var(--color-muted)]">
-          Tutor comments
-        </h2>
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-[var(--color-muted)]">
+            Comments
+          </h2>
+          {parentCommentCount > 0 && (
+            <span className="rounded-full bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700">
+              {parentCommentCount} parent comment{parentCommentCount === 1 ? "" : "s"}
+            </span>
+          )}
+        </div>
+        {parentCommentCount > 0 && (
+          <p className="mb-4 text-sm text-[var(--color-muted)]">
+            Parent feedback on this assignment is shown below, including notes
+            left before the student submits.
+          </p>
+        )}
         <TutorCommentList
-          comments={comments}
+          comments={homeworkComments}
           studentId={item.student_id}
           currentUserId={currentUserId}
           replyAs="admin"
-          showTopLevelComposer={comments.length === 0}
+          showTopLevelComposer={homeworkComments.length === 0}
           homeworkAssignmentId={item.id}
           useReplyLabelsForComposer
         />
@@ -129,8 +149,10 @@ export function HomeworkAssignmentDetail({
 
 export function AdminHomeworkList({
   items,
+  comments = [],
 }: {
   items: (ResolvedHomework & { students?: { display_name: string } | null })[];
+  comments?: TutorComment[];
 }) {
   if (items.length === 0) {
     return <div className="empty-state">No homework assigned yet.</div>;
@@ -142,6 +164,8 @@ export function AdminHomeworkList({
         const studentName = item.students?.display_name ?? "Student";
         const hasSubmission =
           Boolean(item.submission_text) || item.resolved_status === "completed";
+        const homeworkComments = getHomeworkComments(comments, item.id);
+        const parentCommentCount = countParentHomeworkComments(comments, item.id);
 
         return (
           <li key={item.id} className="py-3">
@@ -157,16 +181,25 @@ export function AdminHomeworkList({
                   {studentName} ·{" "}
                   <span className="capitalize">{item.resolved_status}</span>
                   {item.due_date ? ` · due ${item.due_date}` : ""}
+                  {parentCommentCount > 0
+                    ? ` · ${parentCommentCount} parent comment${parentCommentCount === 1 ? "" : "s"}`
+                    : homeworkComments.length > 0
+                      ? ` · ${homeworkComments.length} comment${homeworkComments.length === 1 ? "" : "s"}`
+                      : ""}
                 </p>
               </div>
-              {hasSubmission && (
+              {(hasSubmission || homeworkComments.length > 0) && (
                 <Link
                   href={`/admin/homework/${item.id}`}
                   className="shrink-0 text-sm text-[var(--color-accent)]"
                 >
-                  {item.ai_gradings?.length
-                    ? `Review · ${item.ai_gradings.length} AI grade${item.ai_gradings.length === 1 ? "" : "s"} →`
-                    : "View submission →"}
+                  {hasSubmission
+                    ? item.ai_gradings?.length
+                      ? `Review · ${item.ai_gradings.length} AI grade${item.ai_gradings.length === 1 ? "" : "s"} →`
+                      : parentCommentCount > 0
+                        ? "View submission & parent comments →"
+                        : "View submission →"
+                    : "View parent comments →"}
                 </Link>
               )}
             </div>
@@ -184,20 +217,28 @@ export function AdminHomeworkSubmissions({
   items: ResolvedHomework[];
   comments: TutorComment[];
 }) {
-  const withSubmissions = items.filter(
-    (item) => item.submission_text || item.resolved_status === "completed"
+  const reviewItems = items.filter((item) =>
+    homeworkHasReviewActivity(item, comments, item.id)
   );
 
-  if (withSubmissions.length === 0) {
-    return <div className="empty-state">No homework submissions yet.</div>;
+  if (reviewItems.length === 0) {
+    return (
+      <div className="empty-state">
+        No homework submissions or parent comments yet.
+      </div>
+    );
   }
 
   return (
     <ul className="space-y-3">
-      {withSubmissions.map((item) => {
-        const homeworkComments = comments.filter(
-          (comment) => comment.homework_assignment_id === item.id
-        );
+      {reviewItems.map((item) => {
+        const homeworkComments = getHomeworkComments(comments, item.id);
+        const parentCommentCount = countParentHomeworkComments(comments, item.id);
+        const hasSubmission =
+          Boolean(item.submission_text) || item.resolved_status === "completed";
+        const latestParentComment = homeworkComments
+          .filter((comment) => comment.profiles?.role === "parent")
+          .sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
 
         return (
           <li
@@ -218,17 +259,27 @@ export function AdminHomeworkSubmissions({
                     {" · submitted "}
                     <DisplayDateTime iso={item.completed_at} variant="datetime" />
                   </>
+                ) : parentCommentCount > 0 ? (
+                  " · parent feedback"
                 ) : null}
-                {homeworkComments.length > 0
-                  ? ` · ${homeworkComments.length} comment${homeworkComments.length === 1 ? "" : "s"}`
-                  : ""}
+                {parentCommentCount > 0
+                  ? ` · ${parentCommentCount} parent comment${parentCommentCount === 1 ? "" : "s"}`
+                  : homeworkComments.length > 0
+                    ? ` · ${homeworkComments.length} comment${homeworkComments.length === 1 ? "" : "s"}`
+                    : ""}
               </p>
+              {latestParentComment && (
+                <p className="mt-2 line-clamp-2 text-sm text-slate-700">
+                  <span className="font-medium text-violet-700">Parent: </span>
+                  {latestParentComment.comment}
+                </p>
+              )}
             </div>
             <Link
               href={`/admin/homework/${item.id}`}
               className="shrink-0 text-sm text-[var(--color-accent)]"
             >
-              Review →
+              {hasSubmission ? "Review →" : "View comments →"}
             </Link>
           </li>
         );
