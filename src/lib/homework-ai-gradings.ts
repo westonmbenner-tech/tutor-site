@@ -92,5 +92,6 @@ export function normalizeHomeworkRows(
     mastery_source_url:
       typeof row.mastery_source_url === "string" ? row.mastery_source_url : null,
     mastery_session: parseHomeworkMasterySession(row.mastery_session),
+    notify_parent_on_submit: row.notify_parent_on_submit === true,
   }));
 }

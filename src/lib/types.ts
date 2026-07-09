@@ -101,6 +101,7 @@ export interface HomeworkAssignment {
   mastery_source_text: string | null;
   mastery_source_url: string | null;
   mastery_session: HomeworkMasterySession | null;
+  notify_parent_on_submit: boolean;
 }
 
 export interface StudyLog {

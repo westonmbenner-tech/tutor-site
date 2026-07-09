@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { updateHomework } from "@/app/actions/homework";
 import { HomeworkDescriptionPreview } from "@/components/HomeworkDescription";
 import { MasterySourceFields } from "@/components/admin/MasterySourceFields";
+import { ParentNotifyOnSubmitField } from "@/components/admin/ParentNotifyOnSubmitField";
 import type { HomeworkDescriptionFormat } from "@/lib/parse-homework-latex";
 import type { HomeworkAssignment } from "@/lib/types";
 
@@ -70,6 +71,10 @@ export function EditHomeworkForm({ item }: { item: ResolvedHomework }) {
         defaultSourceType={item.mastery_source_type ?? "text"}
         defaultSourceText={item.mastery_source_text ?? ""}
         defaultSourceUrl={item.mastery_source_url ?? ""}
+      />
+      <ParentNotifyOnSubmitField
+        idPrefix={`edit-${item.id}-`}
+        defaultChecked={item.notify_parent_on_submit ?? false}
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="form-group mb-0">

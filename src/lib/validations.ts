@@ -100,6 +100,7 @@ export const homeworkSchema = z
     due_date: z.string().optional().nullable(),
     links: z.string().optional(),
     attachments: z.string().optional(),
+    notify_parent_on_submit: z.boolean().optional(),
     ...masteryFields,
   })
   .superRefine(validateMasteryConfig);
@@ -148,6 +149,7 @@ export const homeworkUpdateSchema = z
     links: z.string().optional(),
     attachments: z.string().optional(),
     status: z.enum(["assigned", "completed", "late", "missing"]).optional(),
+    notify_parent_on_submit: z.boolean().optional(),
     ...masteryFields,
   })
   .superRefine(validateMasteryConfig);

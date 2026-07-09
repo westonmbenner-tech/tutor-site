@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { homeworkSchema, homeworkUpdateSchema, commentSchema, commentReplySchema, homeworkCommentSchema, streakFreezeSchema, homeworkSubmissionSchema } from "@/lib/validations";
 import { applyStreakFreezeWithBalance } from "@/lib/streak-freezes";
 import { notifyAdminHomeworkComment, notifyAdminHomeworkSubmission } from "@/lib/email/admin-notifications";
+import { notifyLinkedParentsHomeworkSubmitted } from "@/lib/email/parent-notifications";
 import {
   notifyStudentHomeworkAssigned,
   notifyStudentHomeworkTutorComment,
@@ -47,6 +48,13 @@ function parseMasteryFieldsFromForm(formData: FormData) {
   };
 }
 
+function parseHomeworkAdminFieldsFromForm(formData: FormData) {
+  return {
+    ...parseMasteryFieldsFromForm(formData),
+    notify_parent_on_submit: formData.get("notify_parent_on_submit") === "on",
+  };
+}
+
 export async function createHomework(
   _prev: ActionState,
   formData: FormData
@@ -62,7 +70,7 @@ export async function createHomework(
     due_date: formData.get("due_date") || null,
     links: formData.get("links") || undefined,
     attachments: formData.get("attachments") || undefined,
-    ...parseMasteryFieldsFromForm(formData),
+    ...parseHomeworkAdminFieldsFromForm(formData),
   });
 
   if (!parsed.success) {
@@ -89,6 +97,7 @@ export async function createHomework(
       mastery_source_type: parsed.data.mastery_source_type ?? null,
       mastery_source_text: parsed.data.mastery_source_text ?? null,
       mastery_source_url: parsed.data.mastery_source_url ?? null,
+      notify_parent_on_submit: parsed.data.notify_parent_on_submit ?? false,
     })
     .select("id, title, description, due_date")
     .single();
@@ -143,7 +152,7 @@ export async function updateHomework(
     links: formData.get("links") || undefined,
     attachments: formData.get("attachments") || undefined,
     status: formData.get("status") || undefined,
-    ...parseMasteryFieldsFromForm(formData),
+    ...parseHomeworkAdminFieldsFromForm(formData),
   });
 
   if (!parsed.success) {
@@ -178,6 +187,7 @@ export async function updateHomework(
       mastery_source_type: parsed.data.mastery_source_type ?? null,
       mastery_source_text: parsed.data.mastery_source_text ?? null,
       mastery_source_url: parsed.data.mastery_source_url ?? null,
+      notify_parent_on_submit: parsed.data.notify_parent_on_submit ?? false,
     })
     .eq("id", homeworkId);
 
@@ -340,7 +350,7 @@ export async function completeHomework(
   const { data: hw } = await supabase
     .from("homework_assignments")
     .select(
-      "student_id, title, due_date, mandate_ai_mastery, mastery_session, students(display_name)"
+      "student_id, title, due_date, mandate_ai_mastery, mastery_session, notify_parent_on_submit, students(display_name)"
     )
     .eq("id", homeworkId)
     .single();
@@ -385,6 +395,17 @@ export async function completeHomework(
     }).catch((emailError) => {
       console.error("Homework submission email failed:", emailError);
     });
+
+    if (hw.notify_parent_on_submit) {
+      notifyLinkedParentsHomeworkSubmitted(supabase, hw.student_id, {
+        studentName,
+        homeworkTitle: hw.title,
+        dueDate: hw.due_date,
+        submissionText: parsed.data.submission_text,
+      }).catch((emailError) => {
+        console.error("Parent homework submission email failed:", emailError);
+      });
+    }
   }
 
   revalidateHomeworkPaths(homeworkId, hw.student_id);
